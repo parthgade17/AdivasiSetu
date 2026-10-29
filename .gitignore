@@ -32,5 +32,6 @@ __pycache__/
 
 # deploy / runtime
 .env
+.vercel
 backend/uploads/
 backend/*.db

@@ -65,12 +65,17 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="AdivasiSetu API", version="1.1.0", lifespan=lifespan,
               description="Unified scholarship platform for Scheduled Tribe students",
-              docs_url=None if config.IS_PROD and not config.DEMO_MODE else "/docs", redoc_url=None)
+              docs_url="/docs" if not config.IS_PROD or config.DEMO_MODE else None,
+              redoc_url=None)
 
 app.add_middleware(GZipMiddleware, minimum_size=1024)
-if config.CORS_ORIGINS:
-    app.add_middleware(CORSMiddleware, allow_origins=config.CORS_ORIGINS, allow_credentials=False,
-                       allow_methods=["*"], allow_headers=["*"])
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=config.CORS_ORIGINS if config.CORS_ORIGINS else ["*"],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.middleware("http")
@@ -105,6 +110,11 @@ def health():
     except Exception:
         return JSONResponse({"status": "error", "database": "down"}, status_code=503)
     return {"status": "ok", "database": "up"}
+
+
+@app.get("/api")
+def api_root():
+    return {"status": "ok", "message": "AdivasiSetu API is running", "docs": "/docs"}
 
 
 @app.get("/api/config")

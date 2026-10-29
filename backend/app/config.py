@@ -13,8 +13,12 @@ def _list(name: str) -> list[str]:
 
 
 def _db_url() -> str:
-    url = os.getenv("DATABASE_URL", "sqlite:///./adivasisetu.db")
-    # Hosts such as Render/Heroku hand out postgres:// URLs; SQLAlchemy needs a driver name.
+    url = os.getenv("DATABASE_URL")
+    if not url:
+        if os.getenv("VERCEL"):
+            return "sqlite:////tmp/adivasisetu.db"
+        return "sqlite:///./adivasisetu.db"
+    # Hosts such as Render/Heroku/Neon/Supabase hand out postgres:// URLs; SQLAlchemy needs a driver name.
     if url.startswith("postgres://"):
         url = "postgresql+psycopg://" + url[len("postgres://"):]
     elif url.startswith("postgresql://"):
@@ -22,14 +26,14 @@ def _db_url() -> str:
     return url
 
 
-ENV = os.getenv("APP_ENV", "development").lower()
+ENV = os.getenv("APP_ENV", "production" if os.getenv("VERCEL") else "development").lower()
 IS_PROD = ENV == "production"
 # Demo mode = fixed OTP 123456 for demo accounts, demo data, reset endpoint, "advance status" buttons.
-DEMO_MODE = _bool("DEMO_MODE", not IS_PROD)
+DEMO_MODE = _bool("DEMO_MODE", True if os.getenv("VERCEL") else not IS_PROD)
 DATABASE_URL = _db_url()
-SECRET_KEY = os.getenv("SECRET_KEY", "dev-only-change-me")
-CORS_ORIGINS = _list("CORS_ORIGINS")  # empty = same-origin only (the Docker setup serves the UI itself)
-UPLOAD_DIR = os.getenv("UPLOAD_DIR", "uploads")
+SECRET_KEY = os.getenv("SECRET_KEY", "adivasisetu-prod-secret-key-sih2026" if os.getenv("VERCEL") else "dev-only-change-me")
+CORS_ORIGINS = _list("CORS_ORIGINS")  # empty = allows all origins or same-origin
+UPLOAD_DIR = os.getenv("UPLOAD_DIR", "/tmp/uploads" if os.getenv("VERCEL") else "uploads")
 MAX_UPLOAD_MB = int(os.getenv("MAX_UPLOAD_MB", "5"))
 FRONTEND_DIST = os.getenv("FRONTEND_DIST", str(Path(__file__).resolve().parents[2] / "dist"))
 
