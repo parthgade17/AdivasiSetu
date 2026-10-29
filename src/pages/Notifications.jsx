@@ -1,53 +1,12 @@
 import { useState } from 'react';
+import { useApp } from '../context/AppContext';
 import { Bell, CheckCircle, Clock, AlertCircle, IndianRupee, BookOpen, Filter } from 'lucide-react';
 
-const NOTIFICATIONS = [
-  {
-    id: 1, type: 'payment', read: false,
-    title: 'Payment Received — ₹48,000',
-    body: 'Post-Matric Scholarship 2026-27 has been credited to your bank account via PFMS. Ref: PFMS2026092501.',
-    time: '2 hours ago', icon: '💰', color: '#1B7A3E', bg: '#E8F5ED'
-  },
-  {
-    id: 2, type: 'deadline', read: false,
-    title: 'Deadline Alert: MahaDBT Scholarship',
-    body: 'The MahaDBT Scholarship closes in 14 days (31 Oct 2026). You have not yet applied. Complete application now.',
-    time: '5 hours ago', icon: '⏰', color: '#D4800A', bg: '#FFF3DC'
-  },
-  {
-    id: 3, type: 'status', read: false,
-    title: 'Application Under Review',
-    body: 'Your Pre-Matric Scholarship (APP2026002) is now under state-level review. Expected decision by 15 Oct 2026.',
-    time: '1 day ago', icon: '🔄', color: '#1565C0', bg: '#E3F0FF'
-  },
-  {
-    id: 4, type: 'reminder', read: true,
-    title: 'Document Reminder: Bank Passbook',
-    body: 'The uploaded bank passbook image is blurry (42% quality). Please re-upload a clear copy for your application to proceed.',
-    time: '2 days ago', icon: '📄', color: '#C0392B', bg: '#FDECEA'
-  },
-  {
-    id: 5, type: 'info', read: true,
-    title: 'New Scheme Added: Eklavya Fellowship',
-    body: 'A new fellowship worth ₹15,000/month has been added for ST students in STEM courses. Check if you qualify.',
-    time: '3 days ago', icon: '🎓', color: '#003366', bg: '#F0F4FF'
-  },
-  {
-    id: 6, type: 'deadline', read: true,
-    title: 'Reminder: National Overseas Scholarship',
-    body: 'Applications for National Overseas Scholarship 2026-27 close on 28 Feb 2027. Early applications preferred.',
-    time: '1 week ago', icon: '✈️', color: '#003366', bg: '#F0F4FF'
-  },
-];
-
-const typeLabels = {all:'All', payment:'Payments', deadline:'Deadlines', status:'Status', reminder:'Reminders', info:'Information'};
-
 export default function Notifications() {
-  const [notifs, setNotifs] = useState(NOTIFICATIONS);
+  const { notifications: notifs, markRead, markAllRead, t } = useApp();
   const [filter, setFilter] = useState('all');
 
-  const markAllRead = () => setNotifs(n => n.map(x => ({...x, read:true})));
-  const markRead = (id) => setNotifs(n => n.map(x => x.id === id ? {...x, read:true} : x));
+  const typeLabels = {all: t('all'), payment:'Payments', deadline:'Deadlines', status:'Status', reminder:'Reminders', info:'Information'};
 
   const filtered = notifs.filter(n => filter === 'all' || n.type === filter);
   const unreadCount = notifs.filter(n => !n.read).length;
@@ -56,11 +15,11 @@ export default function Notifications() {
     <div className="fade-in" style={{maxWidth:760, margin:'0 auto'}}>
       <div className="page-header" style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
         <div>
-          <h1 className="page-title">Notifications</h1>
+          <h1 className="page-title">{t('notifications')}</h1>
           <p className="page-subtitle">{unreadCount} unread notification{unreadCount !== 1 ? 's' : ''}</p>
         </div>
         <button className="btn btn-outline btn-sm" onClick={markAllRead} disabled={unreadCount === 0}>
-          <CheckCircle size={13}/> Mark All Read
+          <CheckCircle size={13}/> {t('markAllRead')}
         </button>
       </div>
 

@@ -1,63 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Filter, ChevronRight, Clock, BookOpen, IndianRupee, MapPin, ExternalLink } from 'lucide-react';
-
-const SCHEMES = [
-  {
-    id: 1, name: 'Pre-Matric Scholarship for ST Students', ministry: 'Ministry of Tribal Affairs',
-    amount: '₹3,500 – ₹7,000', period: 'per year', deadline: '31 Oct 2026', daysLeft: 30,
-    type: 'central', category: 'Pre-Matric', eligible: true,
-    description: 'For ST students studying in Class 6 to 10. Covers tuition fees, maintenance allowance and study allowance.',
-    criteria: ['Class 6 to 10', 'Annual family income ≤ ₹2.5 Lakh', 'ST Certificate required', 'Domicile certificate of state'],
-    documents: ['ST/Caste Certificate', 'Income Certificate', 'Previous marksheet', 'Aadhaar Card', 'Bank passbook'],
-    states: 'All States / UTs', link: 'https://scholarships.gov.in'
-  },
-  {
-    id: 2, name: 'Post-Matric Scholarship for ST Students', ministry: 'Ministry of Tribal Affairs',
-    amount: 'Up to ₹1,50,000', period: 'per year', deadline: '15 Nov 2026', daysLeft: 45,
-    type: 'central', category: 'Post-Matric', eligible: true,
-    description: 'Covers tuition fees and maintenance for ST students enrolled in Class 11 and above, including professional courses.',
-    criteria: ['Class 11 and above', 'Annual family income ≤ ₹2.5 Lakh', 'Recognized institution', 'Not availing other central scholarship'],
-    documents: ['ST Certificate', 'Income Certificate', 'Admission letter', 'Fee receipt', 'Bank account with IFSC'],
-    states: 'All States / UTs', link: 'https://scholarships.gov.in'
-  },
-  {
-    id: 3, name: 'National Fellowship for Higher Education (ST)', ministry: 'UGC',
-    amount: '₹31,000 + HRA', period: 'per month', deadline: '30 Sep 2026', daysLeft: -1,
-    type: 'central', category: 'Fellowship', eligible: false,
-    description: 'JRF/SRF level fellowship for ST students enrolled in M.Phil/Ph.D programs at recognized universities.',
-    criteria: ['Enrolled in M.Phil or Ph.D', 'NET/JRF qualified or exempted', 'Age ≤ 35 years', 'Not employed full-time'],
-    documents: ['UGC-NET scorecard', 'Enrollment letter', 'ST Certificate', 'Research guide approval'],
-    states: 'All States / UTs', link: 'https://ugc.ac.in'
-  },
-  {
-    id: 4, name: 'National Overseas Scholarship for ST', ministry: 'Ministry of Tribal Affairs',
-    amount: 'Full Funding (abroad)', period: 'entire course', deadline: '28 Feb 2027', daysLeft: 150,
-    type: 'central', category: 'Overseas', eligible: false,
-    description: 'Funding for ST students to pursue Masters or Ph.D abroad at recognized international universities.',
-    criteria: ['PG or Ph.D at foreign university', 'Age ≤ 35 years', 'Income ≤ ₹6 Lakh', 'First time applicant'],
-    documents: ['Offer letter from foreign university', 'ST Certificate', 'Income affidavit', 'Passport copy'],
-    states: 'All States / UTs', link: 'https://tribal.nic.in'
-  },
-  {
-    id: 5, name: 'MahaDBT Scholarship – Maharashtra', ministry: 'Govt of Maharashtra',
-    amount: '₹5,000 – ₹80,000', period: 'per year', deadline: '31 Oct 2026', daysLeft: 30,
-    type: 'state', category: 'State Scheme', eligible: true,
-    description: 'Consolidated scholarship for ST students in Maharashtra through the MahaDBT portal covering multiple sub-schemes.',
-    criteria: ['Maharashtra domicile', 'Annual income ≤ ₹8 Lakh', 'Enrolled in recognized institution in MH', 'ST Certificate from MH'],
-    documents: ['Maharashtra domicile certificate', 'ST Certificate (MH)', 'Income Certificate', 'College bonafide certificate'],
-    states: 'Maharashtra only', link: 'https://mahadbt.maharashtra.gov.in'
-  },
-  {
-    id: 6, name: 'Rajiv Gandhi Eklavya Scholarship – MP', ministry: 'Govt of Madhya Pradesh',
-    amount: '₹10,000 – ₹40,000', period: 'per year', deadline: '20 Oct 2026', daysLeft: 19,
-    type: 'state', category: 'State Scheme', eligible: false,
-    description: 'For ST students from MP pursuing professional and technical courses at recognized institutions.',
-    criteria: ['MP domicile', 'Enrolled in professional/technical UG/PG', 'Income ≤ ₹6 Lakh', 'ST Certificate from MP'],
-    documents: ['MP domicile', 'MP ST Certificate', 'College enrollment proof', 'Fee structure'],
-    states: 'Madhya Pradesh only', link: 'https://scholarshipportal.mp.nic.in'
-  },
-];
+import { Search, ChevronRight, Clock, MapPin, ExternalLink, Mic } from 'lucide-react';
+import { useApp } from '../context/AppContext';
+import ListenButton from '../components/ListenButton';
+import { listen } from '../services/voice';
 
 const categories = ['All', 'Pre-Matric', 'Post-Matric', 'Fellowship', 'Overseas', 'State Scheme'];
 const types = ['All', 'central', 'state', 'private'];
@@ -69,6 +15,15 @@ export default function ScholarshipList() {
   const [selectedType, setSelectedType] = useState('All');
   const [showEligibleOnly, setShowEligibleOnly] = useState(false);
   const [expanded, setExpanded] = useState(null);
+  const [sortBy, setSortBy] = useState('deadline');
+  const [listening, setListening] = useState(false);
+  const { schemes: SCHEMES, applyToScheme, isApplied, t, lang, toast, role } = useApp();
+  const canApply = role !== 'admin';
+
+  const voiceSearch = () => {
+    const r = listen(lang, text => setSearch(text), () => setListening(false));
+    if (r) setListening(true); else toast(t('voiceUnsupported'), 'error');
+  };
 
   const filtered = SCHEMES.filter(s => {
     const q = search.toLowerCase();
@@ -77,19 +32,33 @@ export default function ScholarshipList() {
     const matchType = selectedType === 'All' || s.type === selectedType;
     const matchEligible = !showEligibleOnly || s.eligible;
     return matchQ && matchCat && matchType && matchEligible;
+  }).sort((a, b) => {
+    if (sortBy === 'eligible') return (b.eligible ? 1 : 0) - (a.eligible ? 1 : 0) || a.daysLeft - b.daysLeft;
+    if (sortBy === 'amount') return (b.amountValue || 0) - (a.amountValue || 0);
+    const da = a.daysLeft < 0 ? 9999 : a.daysLeft, db = b.daysLeft < 0 ? 9999 : b.daysLeft;
+    return da - db;
   });
 
   const urgentCount = SCHEMES.filter(s => s.daysLeft >= 0 && s.daysLeft <= 20).length;
+
+  const catLabels = {
+    'All': t('all'),
+    'Pre-Matric': t('preMatric'),
+    'Post-Matric': t('postMatric'),
+    'Fellowship': t('fellowship'),
+    'Overseas': t('overseas'),
+    'State Scheme': t('stateScheme'),
+  };
 
   return (
     <div className="fade-in">
       <div className="page-header" style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start'}}>
         <div>
-          <h1 className="page-title">Scholarship Schemes</h1>
-          <p className="page-subtitle">{SCHEMES.length} schemes available · <span style={{color:'#D4800A', fontWeight:600}}>{urgentCount} closing soon</span></p>
+          <h1 className="page-title">{t('scholarships')}</h1>
+          <p className="page-subtitle">{SCHEMES.length} {t('activeSchemes')} · <span style={{color:'#D4800A', fontWeight:600}}>{t('closingSoon', { n: urgentCount })}</span></p>
         </div>
         <button className="btn btn-saffron" onClick={() => navigate('/eligibility')}>
-          Check My Eligibility
+          {t('checkEligibility')}
         </button>
       </div>
 
@@ -99,11 +68,15 @@ export default function ScholarshipList() {
           <div style={{flex:1, minWidth:220, display:'flex', alignItems:'center', gap:8, padding:'9px 12px', border:'1.5px solid #DDE1EE', borderRadius:8, background:'#F8F9FC'}}>
             <Search size={14} color="#9AA3BC"/>
             <input
-              placeholder="Search schemes..."
+              placeholder={t('searchSchemes')}
               value={search}
               onChange={e => setSearch(e.target.value)}
               style={{border:'none', background:'none', fontSize:13, flex:1, color:'#1E2541', outline:'none'}}
             />
+            <button onClick={voiceSearch} title={t('voiceSearch')} aria-label={t('voiceSearch')}
+              style={{background:'none', border:'none', cursor:'pointer', color: listening ? '#FF6B1A' : '#68738F', display:'flex'}}>
+              <Mic size={15}/>
+            </button>
           </div>
           <div style={{display:'flex', gap:6, flexWrap:'wrap'}}>
             {categories.map(c => (
@@ -111,7 +84,7 @@ export default function ScholarshipList() {
                 key={c}
                 className={`filter-chip${selectedCat === c ? ' active' : ''}`}
                 onClick={() => setSelectedCat(c)}
-              >{c}</button>
+              >{catLabels[c] || c}</button>
             ))}
           </div>
           <button
@@ -124,18 +97,18 @@ export default function ScholarshipList() {
               display:'flex', alignItems:'center', gap:6
             }}
           >
-            ✅ Eligible Only
+            ✅ {t('eligibleTag')}
           </button>
         </div>
       </div>
 
       {/* Results Count */}
       <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12}}>
-        <span style={{fontSize:13, color:'#68738F', fontWeight:500}}>Showing {filtered.length} scheme{filtered.length !== 1 ? 's' : ''}</span>
-        <select className="form-control" style={{width:'auto', fontSize:12, padding:'5px 10px'}}>
-          <option>Sort: Deadline (Nearest)</option>
-          <option>Sort: Amount (Highest)</option>
-          <option>Sort: Eligibility First</option>
+        <span style={{fontSize:13, color:'#68738F', fontWeight:500}}>{filtered.length} {t('scholarships')}</span>
+        <select className="form-control" style={{width:'auto', fontSize:12, padding:'5px 10px'}} value={sortBy} onChange={e => setSortBy(e.target.value)}>
+          <option value="deadline">{t('sortDeadline')}</option>
+          <option value="amount">{t('sortAmount')}</option>
+          <option value="eligible">{t('sortEligible')}</option>
         </select>
       </div>
 
@@ -191,6 +164,9 @@ export default function ScholarshipList() {
             {expanded === s.id && (
               <div style={{padding:'0 20px 20px', borderTop:'1px solid #EFF1F7'}} className="fade-in">
                 <p style={{fontSize:13, color:'#4B5470', marginTop:14, lineHeight:1.7, marginBottom:16}}>{s.description}</p>
+                {s.eligible === false && s.failed?.length > 0 && (
+                  <div className="alert alert-warning" style={{marginBottom:16}}>Why not eligible: {s.failed.join(' · ')}</div>
+                )}
                 <div className="grid-2" style={{gap:20}}>
                   <div>
                     <div style={{fontSize:12, fontWeight:700, color:'#003366', marginBottom:8, textTransform:'uppercase', letterSpacing:'0.5px'}}>Eligibility Criteria</div>
@@ -209,28 +185,37 @@ export default function ScholarshipList() {
                     ))}
                   </div>
                 </div>
-                <div style={{display:'flex', gap:10, marginTop:16, paddingTop:16, borderTop:'1px solid #EFF1F7'}}>
-                  {s.eligible ? (
+                <div style={{display:'flex', gap:10, marginTop:16, paddingTop:16, borderTop:'1px solid #EFF1F7', flexWrap:'wrap'}}>
+                  {!canApply ? null : isApplied(s.id) ? (
+                    <button className="btn btn-outline" onClick={e => { e.stopPropagation(); navigate('/applications'); }}>
+                      ✓ {t('alreadyApplied')}
+                    </button>
+                  ) : s.eligible ? (
                     <button
                       className="btn btn-saffron"
-                      onClick={e => { e.stopPropagation(); navigate('/applications'); }}
+                      onClick={async e => { e.stopPropagation(); const r = await applyToScheme(s); if (r) navigate('/applications'); }}
                     >
-                      Apply Now <ChevronRight size={14}/>
+                      {t('applyNow')} <ChevronRight size={14}/>
+                    </button>
+                  ) : s.eligible === false ? (
+                    <button className="btn btn-outline" disabled style={{opacity:0.6}} title={(s.failed || []).join(', ')}>
+                      {t('notEligibleTag')}
                     </button>
                   ) : (
-                    <button className="btn btn-outline" disabled style={{opacity:0.6}}>
-                      Not Eligible Yet
+                    <button className="btn btn-outline" onClick={e => { e.stopPropagation(); navigate('/eligibility'); }}>
+                      {t('checkEligibility')}
                     </button>
                   )}
+                  <ListenButton scheme={s}/>
                   <button
                     className="btn btn-outline btn-sm"
                     onClick={e => { e.stopPropagation(); navigate('/documents'); }}
                   >
-                    Check Documents
+                    {t('documents')}
                   </button>
                   <a href={s.link} target="_blank" rel="noreferrer">
                     <button className="btn btn-outline btn-sm" onClick={e => e.stopPropagation()}>
-                      <ExternalLink size={13}/> Official Portal
+                      <ExternalLink size={13}/> Portal
                     </button>
                   </a>
                 </div>
@@ -243,10 +228,10 @@ export default function ScholarshipList() {
       {filtered.length === 0 && (
         <div style={{textAlign:'center', padding:'60px 32px', background:'white', borderRadius:12, border:'1px solid #DDE1EE'}}>
           <div style={{fontSize:48, marginBottom:16}}>🔍</div>
-          <h3 style={{fontSize:16, fontWeight:700, color:'#003366', marginBottom:6}}>No schemes match your filters</h3>
-          <p style={{fontSize:13, color:'#68738F'}}>Try adjusting your search or filters</p>
+          <h3 style={{fontSize:16, fontWeight:700, color:'#003366', marginBottom:6}}>{t('noSchemesMatch')}</h3>
+          <p style={{fontSize:13, color:'#68738F'}}>{t('searchSchemes')}</p>
           <button className="btn btn-outline" style={{marginTop:16}} onClick={() => { setSearch(''); setSelectedCat('All'); setShowEligibleOnly(false); }}>
-            Clear Filters
+            {t('cancel')}
           </button>
         </div>
       )}

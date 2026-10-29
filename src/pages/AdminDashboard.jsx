@@ -1,11 +1,14 @@
-import { useState } from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line, PieChart, Pie, Cell, Legend, AreaChart, Area
 } from 'recharts';
-import { Download, Filter, MapPin, TrendingUp, Users, FileText, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Download, MapPin, TrendingUp, Users, FileText, AlertTriangle, CheckCircle } from 'lucide-react';
+import { useApp } from '../context/AppContext';
+import { useAdminSummary } from '../hooks/useAdminSummary';
+import ReviewQueue from '../components/ReviewQueue';
+import AdminManage from '../components/AdminManage';
 
-const monthlyTrend = [
+const MONTHLY_TREND = [
   { month: 'Apr', apps: 820, approved: 690, rejected: 130, disbursed: 580 },
   { month: 'May', apps: 1240, approved: 1020, rejected: 220, disbursed: 900 },
   { month: 'Jun', apps: 1580, approved: 1290, rejected: 290, disbursed: 1100 },
@@ -15,7 +18,7 @@ const monthlyTrend = [
   { month: 'Oct', apps: 3100, approved: 2650, rejected: 450, disbursed: 0 },
 ];
 
-const districtData = [
+const DISTRICT_DATA = [
   { name: 'Gadchiroli', eligible: 4800, applied: 3120, approved: 2680, rate: 65, rejRate: 14 },
   { name: 'Nashik', eligible: 6200, applied: 4890, approved: 4300, rate: 79, rejRate: 12 },
   { name: 'Bastar', eligible: 5100, applied: 2100, approved: 1720, rate: 41, rejRate: 18 },
@@ -26,14 +29,14 @@ const districtData = [
   { name: 'Kinnaur', eligible: 1500, applied: 780, approved: 660, rate: 52, rejRate: 15 },
 ];
 
-const schemeWise = [
+const SCHEME_WISE = [
   { name: 'Pre-Matric', applications: 42000, approved: 38000, disbursed: 35000, amount: '₹14.7 Cr' },
   { name: 'Post-Matric', applications: 31000, approved: 27500, disbursed: 25000, amount: '₹38.2 Cr' },
   { name: 'Nat. Fellowship', applications: 4200, approved: 3100, disbursed: 2800, amount: '₹5.8 Cr' },
   { name: 'State Schemes', applications: 18000, approved: 14200, disbursed: 12000, amount: '₹9.4 Cr' },
 ];
 
-const rejectionReasons = [
+const REJECTION_REASONS = [
   { reason: 'Expired Income Certificate', count: 1820, pct: 28 },
   { reason: 'Blurry/Invalid Documents', count: 1430, pct: 22 },
   { reason: 'Income Limit Exceeded', count: 1040, pct: 16 },
@@ -46,8 +49,14 @@ const rejectionReasons = [
 const COLORS = ['#003366', '#FF6B1A', '#1B7A3E', '#D4800A', '#1565C0', '#8E44AD', '#9AA3BC'];
 
 export default function AdminDashboard() {
-  const [selectedDistrict, setSelectedDistrict] = useState('All');
-  const [dateRange, setDateRange] = useState('FY 2026-27');
+  const { toast, config } = useApp();
+  const { data, reload } = useAdminSummary();
+  const k = data?.kpis;
+  const monthlyTrend = data?.monthlyTrend || MONTHLY_TREND;
+  const districtData = data?.districtData || DISTRICT_DATA;
+  const schemeWise = data?.schemeWise || SCHEME_WISE;
+  const rejectionReasons = data?.rejectionReasons || REJECTION_REASONS;
+  const lowCount = (data?.lowCoverage || []).length;
 
   return (
     <div className="fade-in">
@@ -62,22 +71,24 @@ export default function AdminDashboard() {
             <option>FY 2026-27</option>
             <option>FY 2025-26</option>
           </select>
-          <button className="btn btn-outline btn-sm">
+          <button className="btn btn-outline btn-sm" onClick={() => window.print()}>
             <Download size={13}/> Export PDF
           </button>
-          <button className="btn btn-primary btn-sm">
-            Send Alerts to Low-Rate Districts
-          </button>
+          {config.demoMode && (
+            <button className="btn btn-primary btn-sm" onClick={() => toast(`Awareness alert sent to ${lowCount} low-coverage district offices (demo)`, 'success')}>
+              Send Alerts to Low-Rate Districts
+            </button>
+          )}
         </div>
       </div>
 
       {/* KPI Cards */}
       <div className="stats-grid" style={{gridTemplateColumns:'repeat(4,1fr)'}}>
         {[
-          {label:'Total Eligible ST Students', val:'8,42,300', change:'+4.2%', trend:'up', icon:<Users size={22}/>, col:'navy'},
-          {label:'Applications This FY', val:'98,720', change:'+18.5%', trend:'up', icon:<FileText size={22}/>, col:'saffron'},
-          {label:'Overall Approval Rate', val:'85.4%', change:'+3.2%', trend:'up', icon:<CheckCircle size={22}/>, col:'green'},
-          {label:'Total Disbursed (FY)', val:'₹68.1 Cr', change:'on track', trend:'up', icon:<TrendingUp size={22}/>, col:'amber'},
+          {label:'Total Eligible ST Students', val:k?.eligible || '8,42,300', change:'+4.2%', trend:'up', icon:<Users size={22}/>, col:'navy'},
+          {label:'Applications This FY', val:k?.applications || '98,720', change:'+18.5%', trend:'up', icon:<FileText size={22}/>, col:'saffron'},
+          {label:'Overall Approval Rate', val:k?.approvalRate || '85.4%', change:'+3.2%', trend:'up', icon:<CheckCircle size={22}/>, col:'green'},
+          {label:'Total Disbursed (FY)', val:k?.disbursed || '₹68.1 Cr', change:'on track', trend:'up', icon:<TrendingUp size={22}/>, col:'amber'},
         ].map((s, i) => (
           <div key={i} className={`stat-card ${s.col}`}>
             <div className={`stat-icon ${s.col}`}>{s.icon}</div>
@@ -89,6 +100,9 @@ export default function AdminDashboard() {
           </div>
         ))}
       </div>
+
+      {/* Live review queue: applications submitted through the app */}
+      <ReviewQueue onChange={reload}/>
 
       {/* Monthly Trend */}
       <div className="card" style={{marginBottom:20}}>
@@ -259,13 +273,15 @@ export default function AdminDashboard() {
       <div className="card">
         <div className="card-header">
           <span className="card-title">⚠️ Action Required — Intervention Alerts</span>
-          <span className="badge badge-red">3 Urgent</span>
+          <span className="badge badge-red">{lowCount} flagged</span>
         </div>
         <div className="card-body">
           {[
-            {level:'high', district:'Melghat, MH', issue:'Only 34% coverage — 1,920 eligible students haven\'t applied. Deadline in 30 days.', action:'Send SMS + CSC notification'},
-            {level:'high', district:'Dang, GJ', issue:'Rejection rate 21% — primarily expired income certificates. Need awareness camp.', action:'Schedule awareness drive'},
-            {level:'medium', district:'Bastar, CG', issue:'41% coverage despite large eligible population. Connectivity and awareness gap.', action:'Deploy offline app'},
+            ...(data?.lowCoverage || []).map((d) => ({
+              level: d.rate < 40 ? 'high' : 'medium', district: d.name,
+              issue: `Only ${d.rate}% of ${d.eligible.toLocaleString('en-IN')} eligible students have applied; rejection rate ${d.rejRate}%.`,
+              action: d.rejRate >= 20 ? 'Schedule awareness drive' : 'Send SMS + CSC notification',
+            })),
           ].map((a, i) => (
             <div key={i} style={{display:'flex', gap:14, padding:'14px', borderRadius:10, background: a.level === 'high' ? '#FDECEA' : '#FFF3DC', border:`1px solid ${a.level === 'high' ? 'rgba(192,57,43,0.2)' : 'rgba(212,128,10,0.2)'}`, marginBottom:10}}>
               <AlertTriangle size={20} color={a.level === 'high' ? '#C0392B' : '#D4800A'} style={{flexShrink:0, marginTop:2}}/>
@@ -273,13 +289,15 @@ export default function AdminDashboard() {
                 <div style={{fontSize:13, fontWeight:700, color:'#1E2541', marginBottom:3}}>{a.district}</div>
                 <div style={{fontSize:12, color:'#4B5470', lineHeight:1.5}}>{a.issue}</div>
               </div>
-              <button style={{padding:'7px 14px', borderRadius:7, fontSize:12, fontWeight:600, border:'none', cursor:'pointer', background: a.level === 'high' ? '#C0392B' : '#D4800A', color:'white', flexShrink:0}}>
-                {a.action}
-              </button>
+              <span style={{padding:'7px 14px', borderRadius:7, fontSize:12, fontWeight:600, background: a.level === 'high' ? '#C0392B' : '#D4800A', color:'white', flexShrink:0, alignSelf:'flex-start'}}>
+                Suggested: {a.action}
+              </span>
             </div>
           ))}
         </div>
       </div>
+
+      <AdminManage />
     </div>
   );
 }

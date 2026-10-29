@@ -1,22 +1,52 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useApp } from '../context/AppContext';
+import { api } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import { Search, UserPlus, ChevronRight, Phone, MapPin, BookOpen } from 'lucide-react';
-
-const STUDENTS = [
-  { id: 1, name: 'Priya Bhavale', phone: '9876543210', village: 'Dhanora, Gadchiroli', tribe: 'Gond', class: "Bachelor's Degree (UG)", income: '₹1.2L/yr', status: 'complete', applications: 2 },
-  { id: 2, name: 'Raju Meshram', phone: '9765432109', village: 'Aheri, Gadchiroli', tribe: 'Gond', class: 'Class 9–10', income: '₹80K/yr', status: 'incomplete', applications: 1 },
-  { id: 3, name: 'Kavita Atram', phone: '—', village: 'Korpana, Chandrapur', tribe: 'Kolam', class: 'Class 11–12', income: '₹1.5L/yr', status: 'not_started', applications: 0 },
-];
 
 export default function AssistedMode() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
-  const [selected, setSelected] = useState(null);
+  const { user, acting, setActing, schemes, online, toast, t } = useApp();
+  const [students, setStudents] = useState(() => JSON.parse(localStorage.getItem('as_c_students') || '[]'));
   const [newName, setNewName] = useState('');
   const [newPhone, setNewPhone] = useState('');
   const [showNew, setShowNew] = useState(false);
+  const [notes, setNotes] = useState('');
 
-  const filtered = STUDENTS.filter(s => s.name.toLowerCase().includes(search.toLowerCase()));
+  const load = async () => {
+    if (!online) return;
+    try {
+      const list = await api.assistedStudents();
+      setStudents(list);
+      localStorage.setItem('as_c_students', JSON.stringify(list));
+    } catch (e) { toast(e.message, 'error'); }
+  };
+  useEffect(() => { load(); }, [online]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const selected = students.find(s => s.id === acting?.id) || null;
+  useEffect(() => { setNotes(selected?.notes || ''); }, [selected?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  const setSelected = (s) => setActing({ id: s.id, name: s.name });
+
+  const addStudent = async () => {
+    if (!newName.trim()) { toast('Enter the student name', 'error'); return; }
+    if (!online) { toast(t('needsInternet'), 'error'); return; }
+    try {
+      const s = await api.createStudent(newName.trim(), newPhone.trim());
+      setShowNew(false); setNewName(''); setNewPhone('');
+      await load();
+      setSelected(s);
+      toast(`${s.name} registered. Fill their details next.`, 'success');
+    } catch (e) { toast(e.message, 'error'); }
+  };
+
+  const saveNotes = async () => {
+    try { await api.saveNotes(selected.id, notes); toast('Notes saved', 'success'); load(); }
+    catch (e) { toast(e.message, 'error'); }
+  };
+
+  const eligibleSchemes = schemes.filter(sc => sc.eligible);
+  const filtered = students.filter(s => s.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
     <div className="fade-in">
@@ -28,7 +58,7 @@ export default function AssistedMode() {
       <div className="assisted-banner">
         <span style={{fontSize:20}}>ℹ️</span>
         <div>
-          <strong>Assisted Mode</strong> — You are logged in as <strong>Teacher Ramesh Wankhede</strong> (CSC ID: MH-GC-0042).
+          <strong>Assisted Mode</strong> — You are logged in as <strong>{user?.name}</strong> (CSC ID: {user?.cscId}).
           All applications submitted here will be linked to your CSC ID for audit purposes.
         </div>
       </div>
@@ -62,7 +92,7 @@ export default function AssistedMode() {
                 <input className="form-control" style={{flex:1, minWidth:120}} placeholder="Phone (optional)" value={newPhone} onChange={e => setNewPhone(e.target.value)}/>
                 <button
                   className="btn btn-primary btn-sm"
-                  onClick={() => { setShowNew(false); setNewName(''); setNewPhone(''); }}
+                  onClick={addStudent}
                 >
                   Add
                 </button>
@@ -133,10 +163,13 @@ export default function AssistedMode() {
 
                   {/* Eligible schemes for this student */}
                   <div style={{fontSize:12, fontWeight:700, color:'#003366', marginBottom:10, textTransform:'uppercase', letterSpacing:'0.5px'}}>Eligible Schemes</div>
-                  {[
-                    {name:'Pre-Matric Scholarship (ST)', amount:'₹6,500', deadline:'31 Oct 2026'},
-                    {name:'MahaDBT – Maharashtra', amount:'₹18,000', deadline:'31 Oct 2026'},
-                  ].map((sc, i) => (
+                  {selected.class === '—' && (
+                    <div style={{fontSize:12, color:'#68738F', marginBottom:8}}>Fill this student's class, income and state in the Eligibility Checker to see matching schemes.</div>
+                  )}
+                  {selected.class !== '—' && eligibleSchemes.length === 0 && (
+                    <div style={{fontSize:12, color:'#68738F', marginBottom:8}}>No matching schemes for the current details.</div>
+                  )}
+                  {eligibleSchemes.map((sc, i) => (
                     <div key={i} style={{display:'flex', justifyContent:'space-between', alignItems:'center', padding:'10px 12px', border:'1.5px solid rgba(27,122,62,0.2)', borderRadius:8, marginBottom:8, background:'rgba(27,122,62,0.03)'}}>
                       <div>
                         <div style={{fontSize:13, fontWeight:600, color:'#003366'}}>{sc.name}</div>
@@ -155,6 +188,9 @@ export default function AssistedMode() {
                     <button className="btn btn-outline" onClick={() => navigate('/documents')}>
                       Upload Documents
                     </button>
+                    <button className="btn btn-outline" onClick={() => navigate('/applications')}>
+                      Track Applications
+                    </button>
                   </div>
                 </div>
               </div>
@@ -168,8 +204,10 @@ export default function AssistedMode() {
                     rows={3}
                     placeholder="Add notes about this student's case..."
                     style={{resize:'vertical'}}
+                    value={notes}
+                    onChange={e => setNotes(e.target.value)}
                   />
-                  <button className="btn btn-primary btn-sm" style={{marginTop:10}}>Save Notes</button>
+                  <button className="btn btn-primary btn-sm" style={{marginTop:10}} onClick={saveNotes}>Save Notes</button>
                 </div>
               </div>
             </div>

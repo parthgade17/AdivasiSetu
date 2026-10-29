@@ -1,17 +1,7 @@
-import { useState } from 'react';
-import { Upload, CheckCircle, AlertCircle, Eye, Trash2, RefreshCw, Link, Camera } from 'lucide-react';
-
-const REQUIRED_DOCS = [
-  { id: 1, name: 'Scheduled Tribe (ST) Certificate', desc: 'Issued by Tehsildar or above', mandatory: true, status: 'verified', file: 'ST_Certificate.pdf', uploadDate: '05 Sep 2026', quality: 100 },
-  { id: 2, name: 'Income Certificate', desc: 'Annual family income, issued by competent authority', mandatory: true, status: 'pending_review', file: 'Income_Cert.jpg', uploadDate: '08 Sep 2026', quality: 88 },
-  { id: 3, name: 'Domicile / Residence Certificate', desc: 'Proof of residence in the state', mandatory: true, status: 'missing', file: null, uploadDate: null, quality: null },
-  { id: 4, name: 'Previous Year Marksheet', desc: 'Last exam result certificate', mandatory: true, status: 'verified', file: 'Marksheet_2025.pdf', uploadDate: '05 Sep 2026', quality: 100 },
-  { id: 5, name: 'Aadhaar Card', desc: 'Valid Aadhaar card copy', mandatory: true, status: 'verified', file: 'Aadhaar_Ramesh.jpg', uploadDate: '05 Sep 2026', quality: 95 },
-  { id: 6, name: 'Bank Passbook / Statement', desc: 'Account in student\'s name with IFSC', mandatory: true, status: 'quality_issue', file: 'Bank_Pass_blurry.jpg', uploadDate: '10 Sep 2026', quality: 42 },
-  { id: 7, name: 'College / School Bonafide', desc: 'Current enrollment certificate', mandatory: true, status: 'missing', file: null, uploadDate: null, quality: null },
-  { id: 8, name: 'Passport Size Photo', desc: 'Recent photograph (white background)', mandatory: false, status: 'verified', file: 'Photo_Ramesh.jpg', uploadDate: '05 Sep 2026', quality: 100 },
-  { id: 9, name: 'Income Tax Return / Form 16', desc: 'If annual income > ₹2.5 Lakh', mandatory: false, status: 'missing', file: null, uploadDate: null, quality: null },
-];
+import { useRef, useState } from 'react';
+import { Upload, AlertCircle, Trash2, RefreshCw, Link, Eye } from 'lucide-react';
+import { useApp } from '../context/AppContext';
+import { api } from '../services/api';
 
 const statusConfig = {
   verified: { color: '#1B7A3E', bg: '#E8F5ED', icon: '✅', label: 'Verified' },
@@ -21,39 +11,56 @@ const statusConfig = {
 };
 
 export default function DocumentUpload() {
-  const [docs, setDocs] = useState(REQUIRED_DOCS);
-  const [dragOver, setDragOver] = useState(null);
+  const { documents: docs, uploadDocument, fetchDigiLocker, deleteDocument, toast, t, studentParams, online, config } = useApp();
   const [digilockerLoading, setDigilockerLoading] = useState(false);
-  const [digilockerDone, setDigilockerDone] = useState(false);
+  const [uploading, setUploading] = useState(null);
+  const fileInput = useRef(null);
+  const pendingType = useRef(null);
+  const digilockerDone = docs.some(d => d.source === 'digilocker');
 
-  const handleFakeUpload = (id) => {
-    setDocs(d => d.map(doc => doc.id === id
-      ? {...doc, status:'pending_review', file:`document_${id}.pdf`, uploadDate: 'Today', quality: 92}
-      : doc
-    ));
+  const pickFile = (docType) => { pendingType.current = docType; fileInput.current?.click(); };
+
+  const onFileChosen = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    const docType = pendingType.current;
+    if (!file || !docType) return;
+    setUploading(docType);
+    const r = await uploadDocument(docType, file);
+    setUploading(null);
+    if (!r) return;
+    if (r.status === 'quality_issue') toast(`Photo quality ${r.quality}%: ${r.issues.join(' ')}`, 'error');
+    else if (r.status === 'verified') toast(`Looks good — ${r.quality}% quality`, 'success');
+    else toast(`Uploaded (${r.quality}% quality). It will be reviewed.`, 'info');
   };
 
-  const handleDigilocker = () => {
+  const viewFile = async (docType) => {
+    if (!online) { toast(t('needsInternet'), 'error'); return; }
+    const tab = window.open('', '_blank'); // open first so the popup blocker allows it
+    try {
+      const blob = await api.documentFile(docType, studentParams || {});
+      const url = URL.createObjectURL(blob);
+      if (tab) tab.location.href = url; else window.location.href = url;
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+    } catch (e) { tab?.close(); toast(e.message, 'error'); }
+  };
+
+  const handleDigilocker = async () => {
     setDigilockerLoading(true);
-    setTimeout(() => {
-      setDigilockerDone(true);
-      setDigilockerLoading(false);
-      setDocs(d => d.map(doc =>
-        [1, 3, 5].includes(doc.id)
-          ? {...doc, status:'verified', quality:100, file:`DigiLocker_${doc.id}.pdf`, uploadDate:'Today'}
-          : doc
-      ));
-    }, 2000);
+    if (await fetchDigiLocker()) toast('ST certificate, domicile and Aadhaar fetched from DigiLocker', 'success');
+    setDigilockerLoading(false);
   };
 
-  const verified = docs.filter(d => d.status === 'verified').length;
-  const total = docs.filter(d => d.mandatory).length;
+  const issues = docs.filter(d => d.status === 'quality_issue');
+  const verified = docs.filter(d => d.mandatory && d.status === 'verified').length;
+  const total = docs.filter(d => d.mandatory).length || 1;
   const completePct = Math.round((verified / total) * 100);
 
   return (
     <div className="fade-in">
       <div className="page-header">
-        <h1 className="page-title">Document Manager</h1>
+        <h1 className="page-title">{t('documents')}</h1>
+        <input ref={fileInput} type="file" accept="image/*,application/pdf" capture="environment" className="file-input-hidden" onChange={onFileChosen} aria-hidden="true" tabIndex={-1}/>
         <p className="page-subtitle">Upload and verify all documents required for scholarship applications.</p>
       </div>
 
@@ -61,8 +68,8 @@ export default function DocumentUpload() {
       <div style={{background:'linear-gradient(135deg, #003366, #1A5FAD)', borderRadius:12, padding:'20px 24px', marginBottom:20, display:'flex', alignItems:'center', gap:16}}>
         <div style={{fontSize:36}}>🔗</div>
         <div style={{flex:1}}>
-          <div style={{fontSize:15, fontWeight:700, color:'white', marginBottom:4}}>Auto-fetch from DigiLocker</div>
-          <div style={{fontSize:12, color:'rgba(255,255,255,0.7)'}}>Instantly import ST Certificate, Aadhaar, and Domicile Certificate from DigiLocker without manual upload.</div>
+          <div style={{fontSize:15, fontWeight:700, color:'white', marginBottom:4}}>{t('digiLockerBanner')}</div>
+          <div style={{fontSize:12, color:'rgba(255,255,255,0.7)'}}>{t('digiLockerDesc')}</div>
         </div>
         <button
           onClick={handleDigilocker}
@@ -75,8 +82,8 @@ export default function DocumentUpload() {
             opacity: digilockerLoading ? 0.7 : 1
           }}
         >
-          {digilockerLoading ? <><RefreshCw size={14} style={{animation:'spin 1s linear infinite'}}/> Fetching...</> :
-            digilockerDone ? <>✅ Fetched from DigiLocker</> : <><Link size={14}/> Connect DigiLocker</>}
+          {digilockerLoading ? <><RefreshCw size={14} className="spin"/> Loading…</> :
+            digilockerDone ? <>✅ {t('verified')}</> : <><Link size={14}/> {t('connectDigiLocker')}{config.digilockerMode === 'mock' ? ' (simulated)' : ''}</>}
         </button>
       </div>
 
@@ -108,11 +115,12 @@ export default function DocumentUpload() {
       </div>
 
       {/* Quality Issue Alert */}
-      {docs.some(d => d.status === 'quality_issue') && (
+      {issues.length > 0 && (
         <div className="alert alert-error">
           <AlertCircle size={16}/>
           <div>
-            <strong>1 document has a quality issue</strong> — Bank passbook photo is blurry. Please re-upload a clear, well-lit image.
+            <strong>{issues.length} document{issues.length > 1 ? 's have' : ' has'} a quality issue</strong> —{' '}
+            {issues.map(d => `${d.name}: ${(d.issues || []).join(' ') || 'unclear photo'}`).join(' · ')}. Please re-upload a clear, well-lit image.
           </div>
         </div>
       )}
@@ -122,9 +130,7 @@ export default function DocumentUpload() {
         <div className="card-header">
           <span className="card-title">Required Documents</span>
           <div style={{display:'flex', gap:8}}>
-            <button className="btn btn-outline btn-sm">
-              <Camera size={13}/> Photo Guide
-            </button>
+
           </div>
         </div>
         <div style={{padding:'8px 0'}}>
@@ -159,7 +165,7 @@ export default function DocumentUpload() {
                     </div>
                   )}
                   {/* Quality bar */}
-                  {doc.quality !== null && (
+                  {doc.quality != null && (
                     <div style={{display:'flex', alignItems:'center', gap:8, marginTop:5}}>
                       <div className="progress-bar-wrap" style={{width:100}}>
                         <div className="progress-bar" style={{
@@ -183,24 +189,26 @@ export default function DocumentUpload() {
 
                 {/* Actions */}
                 <div style={{display:'flex', gap:6, flexShrink:0}}>
-                  {doc.file && (
-                    <button className="btn btn-outline btn-sm btn-icon" title="View">
-                      <Eye size={13}/>
+                  {doc.hasFile && (
+                    <button className="btn btn-outline btn-sm btn-icon" title="View file" aria-label={`View ${doc.name}`} onClick={() => viewFile(doc.id)}>
+                      <Eye size={12}/>
                     </button>
                   )}
                   {doc.status === 'missing' || doc.status === 'quality_issue' ? (
-                    <div
+                    <button
+                      disabled={uploading === doc.id}
                       style={{
-                        padding:'7px 12px', borderRadius:7, fontSize:12, fontWeight:700,
+                        padding:'7px 12px', borderRadius:7, fontSize:12, fontWeight:700, border:'none',
                         background:'#003366', color:'white', cursor:'pointer', display:'flex', alignItems:'center', gap:6
                       }}
-                      onClick={() => handleFakeUpload(doc.id)}
+                      onClick={() => pickFile(doc.id)}
                     >
-                      <Upload size={12}/> {doc.status === 'quality_issue' ? 'Re-upload' : 'Upload'}
-                    </div>
+                      {uploading === doc.id ? <><RefreshCw size={12} className="spin"/> Checking…</> :
+                        <><Upload size={12}/> {doc.status === 'quality_issue' ? 'Re-upload' : 'Upload'}</>}
+                    </button>
                   ) : (
-                    <button className="btn btn-outline btn-sm btn-icon" title="Delete" style={{color:'#C0392B'}}
-                      onClick={() => setDocs(d => d.map(x => x.id === doc.id ? {...x, status:'missing', file:null, uploadDate:null, quality:null} : x))}
+                    <button className="btn btn-outline btn-sm btn-icon" title="Remove" aria-label={`Remove ${doc.name}`} style={{color:'#C0392B'}}
+                      onClick={() => deleteDocument(doc.id)}
                     >
                       <Trash2 size={12}/>
                     </button>

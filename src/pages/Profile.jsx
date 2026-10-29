@@ -1,20 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useApp } from '../context/AppContext';
 import { Edit3, Save, CheckCircle, User, BookOpen, Home, CreditCard, Shield } from 'lucide-react';
 
 const SECTIONS = ['Personal', 'Academic', 'Financial', 'Bank Details'];
-
-const initialProfile = {
-  name: 'Ramesh Bhavale', dob: '1998-05-14', gender: 'Male',
-  aadhaar: '****-****-3421', phone: '9876543210', email: 'ramesh.bhavale@gmail.com',
-  tribe: 'Gond', state: 'Maharashtra', district: 'Gadchiroli', village: 'Dhanora',
-  category: 'ST', bpl: 'No', employed: 'No',
-  course: "Bachelor's Degree (UG)", institution: 'Gondwana University, Gadchiroli',
-  year: '3rd Year', branch: 'B.Sc Agriculture', rollNo: 'GU2024AGR0042',
-  lastPercentage: '74.5', boardYear: '2021',
-  income: '120000', fatherOccupation: 'Farmer', motherOccupation: 'Daily Wage Worker',
-  bankName: 'Bank of Maharashtra', accountNo: '****9821', ifsc: 'MAHB0001234',
-  branch_bank: 'Gadchiroli Main Branch', accountHolder: 'Ramesh Bhavale',
-};
 
 const completenessItems = [
   {key:'name', label:'Full Name'},
@@ -27,40 +15,53 @@ const completenessItems = [
   {key:'district', label:'District'},
 ];
 
+// Defined outside the page component so inputs keep focus while typing.
+function Field({ label, field, type = 'text', options, profile, update, editing }) {
+  const value = profile[field] ?? '';
+  const opts = options && value && !options.includes(value) ? [value, ...options] : options;
+  return (
+    <div className="form-group">
+      <label className="form-label">{label}</label>
+      {opts ? (
+        <select className="form-control" value={value} onChange={e => update(field, e.target.value)} disabled={!editing}>
+          <option value="">Select</option>
+          {opts.map(o => <option key={o}>{o}</option>)}
+        </select>
+      ) : (
+        <input className="form-control" type={type} value={value} onChange={e => update(field, e.target.value)} disabled={!editing} style={{background: !editing ? '#F8F9FC' : 'white'}}/>
+      )}
+    </div>
+  );
+}
+
 export default function Profile() {
-  const [profile, setProfile] = useState(initialProfile);
+  const { profile: saved, saveProfile, t, acting } = useApp();
+  const [profile, setProfile] = useState(saved || {});
   const [editing, setEditing] = useState(false);
+  useEffect(() => { if (!editing) setProfile(saved || {}); }, [saved, editing]);
+
+  const toggleEdit = async () => {
+    if (!editing) { setEditing(true); return; }
+    if (await saveProfile(profile)) setEditing(false);
+  };
   const [activeSection, setActiveSection] = useState('Personal');
 
   const completeness = completenessItems.filter(i => profile[i.key]).length;
   const pct = Math.round((completeness / completenessItems.length) * 100);
 
   const update = (k, v) => setProfile(p => ({...p, [k]: v}));
-  const Field = ({label, field, type='text', options}) => (
-    <div className="form-group">
-      <label className="form-label">{label}</label>
-      {options ? (
-        <select className="form-control" value={profile[field]} onChange={e => update(field, e.target.value)} disabled={!editing}>
-          {options.map(o => <option key={o}>{o}</option>)}
-        </select>
-      ) : (
-        <input className="form-control" type={type} value={profile[field]} onChange={e => update(field, e.target.value)} disabled={!editing} style={{background: !editing ? '#F8F9FC' : 'white'}}/>
-      )}
-    </div>
-  );
-
   return (
     <div className="fade-in" style={{maxWidth:900, margin:'0 auto'}}>
       <div className="page-header" style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
         <div>
-          <h1 className="page-title">My Profile</h1>
+          <h1 className="page-title">{acting ? `${acting.name} — Profile` : t('profile')}</h1>
           <p className="page-subtitle">Your master profile — used to auto-fill all scholarship applications.</p>
         </div>
         <button
           className={`btn ${editing ? 'btn-saffron' : 'btn-primary'}`}
-          onClick={() => setEditing(e => !e)}
+          onClick={toggleEdit}
         >
-          {editing ? <><Save size={14}/> Save Profile</> : <><Edit3 size={14}/> Edit Profile</>}
+          {editing ? <><Save size={14}/> {t('save')}</> : <><Edit3 size={14}/> Edit Profile</>}
         </button>
       </div>
 
@@ -74,7 +75,7 @@ export default function Profile() {
                 👤
               </div>
               <div style={{fontSize:18, fontWeight:800, color:'#003366'}}>{profile.name}</div>
-              <div style={{fontSize:12, color:'#68738F', marginTop:3}}>{profile.tribe} · {profile.district}, {profile.state}</div>
+              <div style={{fontSize:12, color:'#68738F', marginTop:3}}>{[profile.tribe, [profile.district, profile.state].filter(Boolean).join(', ')].filter(Boolean).join(' · ')}</div>
               <div style={{display:'flex', gap:6, justifyContent:'center', marginTop:10, flexWrap:'wrap'}}>
                 <span className="badge badge-navy">ST Category</span>
                 <span className="badge badge-saffron">Maharashtra</span>
@@ -138,26 +139,26 @@ export default function Profile() {
               {activeSection === 'Personal' && (
                 <div className="fade-in">
                   <div className="form-grid-2">
-                    <Field label="Full Name" field="name"/>
-                    <Field label="Date of Birth" field="dob" type="date"/>
-                    <Field label="Gender" field="gender" options={['Male','Female','Other']}/>
-                    <Field label="Mobile Number" field="phone"/>
-                    <Field label="Email Address" field="email" type="email"/>
-                    <Field label="Aadhaar Number" field="aadhaar"/>
-                    <Field label="Tribe / Community" field="tribe"/>
-                    <Field label="BPL Card Holder?" field="bpl" options={['Yes','No']}/>
+                    <Field profile={profile} update={update} editing={editing} label="Full Name" field="name"/>
+                    <Field profile={profile} update={update} editing={editing} label="Date of Birth" field="dob" type="date"/>
+                    <Field profile={profile} update={update} editing={editing} label="Gender" field="gender" options={['Male','Female','Other']}/>
+                    <Field profile={profile} update={update} editing={editing} label="Mobile Number" field="phone"/>
+                    <Field profile={profile} update={update} editing={editing} label="Email Address" field="email" type="email"/>
+                    <Field profile={profile} update={update} editing={editing} label="Aadhaar Number" field="aadhaar"/>
+                    <Field profile={profile} update={update} editing={editing} label="Tribe / Community" field="tribe"/>
+                    <Field profile={profile} update={update} editing={editing} label="BPL Card Holder?" field="bpl" options={['Yes','No']}/>
                   </div>
                 </div>
               )}
               {activeSection === 'Academic' && (
                 <div className="fade-in">
                   <div className="form-grid-2">
-                    <Field label="Current Course / Degree" field="course" options={['Class 6–8','Class 9–10','Class 11–12','Diploma / ITI',"Bachelor's Degree (UG)","Master's Degree (PG)",'Ph.D / Research']}/>
-                    <Field label="Institution Name" field="institution"/>
-                    <Field label="Year of Study" field="year" options={['1st Year','2nd Year','3rd Year','4th Year','5th Year']}/>
-                    <Field label="Branch / Specialization" field="branch"/>
-                    <Field label="Roll Number / Enrollment No." field="rollNo"/>
-                    <Field label="Last Exam Percentage" field="lastPercentage"/>
+                    <Field profile={profile} update={update} editing={editing} label="Current Course / Degree" field="course" options={['Class 6–8','Class 9–10','Class 11–12','Diploma / ITI',"Bachelor's Degree (UG)","Master's Degree (PG)",'Ph.D / Research']}/>
+                    <Field profile={profile} update={update} editing={editing} label="Institution Name" field="institution"/>
+                    <Field profile={profile} update={update} editing={editing} label="Year of Study" field="year" options={['1st Year','2nd Year','3rd Year','4th Year','5th Year']}/>
+                    <Field profile={profile} update={update} editing={editing} label="Branch / Specialization" field="branch"/>
+                    <Field profile={profile} update={update} editing={editing} label="Roll Number / Enrollment No." field="rollNo"/>
+                    <Field profile={profile} update={update} editing={editing} label="Last Exam Percentage" field="lastPercentage"/>
                   </div>
                 </div>
               )}
@@ -166,13 +167,13 @@ export default function Profile() {
                   <div className="form-grid-2">
                     <div className="form-group">
                       <label className="form-label">Annual Family Income (₹)</label>
-                      <input className="form-control" type="number" value={profile.income} onChange={e => update('income', e.target.value)} disabled={!editing} style={{background:!editing?'#F8F9FC':'white'}}/>
+                      <input className="form-control" type="number" value={profile.income ?? ''} onChange={e => update('income', e.target.value)} disabled={!editing} style={{background:!editing?'#F8F9FC':'white'}}/>
                     </div>
-                    <Field label="Father's Occupation" field="fatherOccupation"/>
-                    <Field label="Mother's Occupation" field="motherOccupation"/>
-                    <Field label="State" field="state" options={['Maharashtra','Madhya Pradesh','Chhattisgarh','Odisha']}/>
-                    <Field label="District" field="district"/>
-                    <Field label="Village / Town" field="village"/>
+                    <Field profile={profile} update={update} editing={editing} label="Father's Occupation" field="fatherOccupation"/>
+                    <Field profile={profile} update={update} editing={editing} label="Mother's Occupation" field="motherOccupation"/>
+                    <Field profile={profile} update={update} editing={editing} label="State" field="state" options={['Maharashtra','Madhya Pradesh','Chhattisgarh','Odisha','Jharkhand','Gujarat','Rajasthan','Telangana','Andhra Pradesh']}/>
+                    <Field profile={profile} update={update} editing={editing} label="District" field="district"/>
+                    <Field profile={profile} update={update} editing={editing} label="Village / Town" field="village"/>
                   </div>
                 </div>
               )}
@@ -182,11 +183,11 @@ export default function Profile() {
                     <Shield size={14}/> Bank details are used for scholarship disbursement via PFMS. Ensure they are accurate.
                   </div>
                   <div className="form-grid-2">
-                    <Field label="Account Holder Name" field="accountHolder"/>
-                    <Field label="Bank Name" field="bankName"/>
-                    <Field label="Account Number" field="accountNo"/>
-                    <Field label="IFSC Code" field="ifsc"/>
-                    <Field label="Branch Name" field="branch_bank"/>
+                    <Field profile={profile} update={update} editing={editing} label="Account Holder Name" field="accountHolder"/>
+                    <Field profile={profile} update={update} editing={editing} label="Bank Name" field="bankName"/>
+                    <Field profile={profile} update={update} editing={editing} label="Account Number" field="accountNo"/>
+                    <Field profile={profile} update={update} editing={editing} label="IFSC Code" field="ifsc"/>
+                    <Field profile={profile} update={update} editing={editing} label="Branch Name" field="branch_bank"/>
                   </div>
                 </div>
               )}

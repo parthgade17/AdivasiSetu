@@ -1,60 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle, ChevronRight, ChevronLeft, Award } from 'lucide-react';
-
-const steps = ['Personal', 'Academic', 'Financial', 'Results'];
+import { CheckCircle, ChevronRight, ChevronLeft, Award, Loader2 } from 'lucide-react';
+import { useApp } from '../context/AppContext';
+import ListenButton from '../components/ListenButton';
 
 const states = ['Maharashtra', 'Madhya Pradesh', 'Chhattisgarh', 'Odisha', 'Jharkhand', 'Gujarat', 'Andhra Pradesh', 'Telangana', 'Rajasthan', 'Tamil Nadu'];
 const courses = ['Class 1–5 (Pre-Primary)', 'Class 6–8', 'Class 9–10', 'Class 11–12', 'Diploma / ITI', "Bachelor's Degree (UG)", "Master's Degree (PG)", 'Ph.D / Research', 'Other'];
-
-const ALL_SCHEMES = [
-  {
-    id: 1, name: 'Pre-Matric Scholarship for ST Students', ministry: 'Ministry of Tribal Affairs',
-    amount: '₹3,500 – ₹7,000/yr', deadline: '31 Oct 2026', type: 'central',
-    eligibility: { classes: ['Class 6–8', 'Class 9–10'], maxIncome: 250000, states: 'all' },
-    reasons: ['Your class matches', 'Income below ₹2.5L', 'ST category confirmed'],
-  },
-  {
-    id: 2, name: 'Post-Matric Scholarship for ST Students', ministry: 'Ministry of Tribal Affairs',
-    amount: 'Up to ₹1,50,000/yr', deadline: '15 Nov 2026', type: 'central',
-    eligibility: { classes: ['Class 11–12', 'Diploma / ITI', "Bachelor's Degree (UG)", "Master's Degree (PG)"], maxIncome: 250000, states: 'all' },
-    reasons: ['Post-matriculation course detected', 'Income under ₹2.5L', 'ST Certificate required'],
-  },
-  {
-    id: 3, name: 'National Fellowship for ST Students', ministry: 'UGC',
-    amount: '₹31,000/month + HRA', deadline: '30 Sep 2026', type: 'central',
-    eligibility: { classes: ['Ph.D / Research'], maxIncome: 600000, states: 'all' },
-    reasons: ['Ph.D enrollment', 'NET/JRF qualified or exempted for ST'],
-  },
-  {
-    id: 4, name: 'National Overseas Scholarship', ministry: 'Ministry of Tribal Affairs',
-    amount: 'Full Funding (abroad)', deadline: '28 Feb 2027', type: 'central',
-    eligibility: { classes: ["Master's Degree (PG)", 'Ph.D / Research'], maxIncome: 600000, states: 'all' },
-    reasons: ['PG/Ph.D program', 'Age under 35', 'First applicant in family'],
-  },
-  {
-    id: 5, name: 'MahaDBT Scholarship (Maharashtra)', ministry: 'Govt of Maharashtra',
-    amount: '₹5,000 – ₹80,000', deadline: '31 Oct 2026', type: 'state',
-    eligibility: { classes: ['Class 9–10', 'Class 11–12', "Bachelor's Degree (UG)"], maxIncome: 800000, states: ['Maharashtra'] },
-    reasons: ['Maharashtra domicile detected', 'State portal eligible'],
-  },
-  {
-    id: 6, name: 'Rajiv Gandhi Scholarship (Madhya Pradesh)', ministry: 'Govt of MP',
-    amount: '₹10,000 – ₹40,000', deadline: '20 Oct 2026', type: 'state',
-    eligibility: { classes: ["Bachelor's Degree (UG)", "Master's Degree (PG)"], maxIncome: 600000, states: ['Madhya Pradesh'] },
-    reasons: ['MP domicile', 'UG/PG course enrolled'],
-  },
-];
-
-const checkEligibility = (form) => {
-  const income = parseInt(form.income) || 0;
-  return ALL_SCHEMES.filter(s => {
-    const classOk = s.eligibility.classes.includes(form.course);
-    const incomeOk = income <= s.eligibility.maxIncome;
-    const stateOk = s.eligibility.states === 'all' || s.eligibility.states.includes(form.state);
-    return classOk && incomeOk && stateOk;
-  });
-};
 
 export default function EligibilityChecker() {
   const navigate = useNavigate();
@@ -66,21 +17,58 @@ export default function EligibilityChecker() {
     employed: 'no'
   });
   const [eligible, setEligible] = useState(null);
+  const [checking, setChecking] = useState(false);
+  const { profile, checkEligibility, applyToScheme, isApplied, t, toast, online, acting, role } = useApp();
+
+  const steps = [t('stepLocation'), t('stepEducation'), t('stepFinance'), t('scholarships')];
+
+  // Pre-fill from the saved profile (the student fills details once).
+  useEffect(() => {
+    if (!profile) return;
+    setForm(f => ({
+      ...f,
+      name: profile.name || f.name, state: profile.state || f.state, district: profile.district || f.district,
+      tribe: profile.tribe || f.tribe, course: profile.course || f.course, institution: profile.institution || f.institution,
+      percentage: profile.lastPercentage || f.percentage, income: profile.income || f.income,
+      bpl: (profile.bpl || f.bpl).toLowerCase(), employed: (profile.employed || f.employed).toLowerCase(),
+    }));
+  }, [profile]);
 
   const update = (k, v) => setForm(f => ({...f, [k]: v}));
 
-  const handleNext = () => {
+  const handleNext = async () => {
+    if (step === 0 && !form.state) { toast('Select your state to continue', 'error'); return; }
+    if (step === 1 && !form.course) { toast('Select your current class or course', 'error'); return; }
     if (step === 2) {
-      setEligible(checkEligibility(form));
+      if (form.income === '') { toast('Enter your annual family income', 'error'); return; }
+      setChecking(true);
+      const payload = {
+        name: form.name, state: form.state, district: form.district, tribe: form.tribe, category: 'ST',
+        course: form.course, institution: form.institution, lastPercentage: form.percentage,
+        income: String(form.income), bpl: form.bpl === 'yes' ? 'Yes' : 'No', employed: form.employed === 'yes' ? 'Yes' : 'No',
+        ...(form.aadhaar.length === 12 ? { aadhaar: `****-****-${form.aadhaar.slice(-4)}` } : {}),
+      };
+      setEligible(await checkEligibility(payload));
+      setChecking(false);
     }
     setStep(s => s + 1);
+  };
+
+  const applyAll = async () => {
+    for (const s of eligible.filter(x => !isApplied(x.id))) await applyToScheme(s);
+    navigate('/applications');
   };
 
   return (
     <div className="fade-in" style={{maxWidth:760, margin:'0 auto'}}>
       <div className="page-header">
-        <h1 className="page-title">Eligibility Checker</h1>
-        <p className="page-subtitle">Answer a few questions and instantly see which scholarships you qualify for.</p>
+        <h1 className="page-title">{t('eligibility')}</h1>
+        <p className="page-subtitle">
+          Answer a few questions and instantly see which scholarships you qualify for.
+          {!online && ' Works offline — results use schemes saved on this device.'}
+          {role === 'admin' && ' Preview mode: results are not saved.'}
+          {role === 'assistant' && acting && ` Filling for ${acting.name}.`}
+        </p>
       </div>
 
       {/* Step Indicator */}
@@ -248,20 +236,30 @@ export default function EligibilityChecker() {
                             </span>
                           ))}
                         </div>
-                        <button
-                          onClick={() => navigate('/scholarships')}
-                          style={{marginTop:10, padding:'8px 16px', background:'#003366', color:'white', border:'none', borderRadius:7, fontSize:12, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', gap:6}}
-                        >
-                          Apply Now <ChevronRight size={13}/>
-                        </button>
+                        <div style={{display:'flex', gap:8, marginTop:10, flexWrap:'wrap'}}>
+                          {role !== 'admin' && (isApplied(s.id) ? (
+                            <span className="badge badge-green" style={{padding:'8px 12px'}}>✓ {t('alreadyApplied')}</span>
+                          ) : (
+                            <button
+                              onClick={async () => { const r = await applyToScheme(s); if (r) navigate('/applications'); }}
+                              style={{padding:'8px 16px', background:'#003366', color:'white', border:'none', borderRadius:7, fontSize:12, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', gap:6}}
+                            >
+                              {t('applyNow')} <ChevronRight size={13}/>
+                            </button>
+                          ))}
+                          <ListenButton scheme={s}/>
+                        </div>
                       </div>
                     ))}
                   </div>
 
                   <div style={{marginTop:20, display:'flex', gap:10, justifyContent:'center'}}>
-                    <button className="btn btn-saffron" onClick={() => navigate('/scholarships')}>
-                      <Award size={15}/> Apply for All Eligible Schemes
-                    </button>
+                    {role !== 'admin' && eligible.some(x => !isApplied(x.id)) && (
+                      <button className="btn btn-saffron" onClick={applyAll}>
+                        <Award size={15}/> Apply for All Eligible Schemes
+                      </button>
+                    )}
+                    <button className="btn btn-outline" onClick={() => setStep(0)}>Edit details</button>
                   </div>
                 </>
               ) : (
@@ -288,13 +286,14 @@ export default function EligibilityChecker() {
                 disabled={step === 0}
                 style={{opacity: step === 0 ? 0.4 : 1}}
               >
-                <ChevronLeft size={15}/> Previous
+                <ChevronLeft size={15}/> {t('previous')}
               </button>
               <button
                 className="btn btn-saffron"
                 onClick={handleNext}
+                disabled={checking}
               >
-                {step === 2 ? 'Check Eligibility' : 'Next'} <ChevronRight size={15}/>
+                {checking ? <><Loader2 size={15} className="spin"/> Checking…</> : <>{step === 2 ? t('calculateEligibility') : t('next')} <ChevronRight size={15}/></>}
               </button>
             </div>
           )}
