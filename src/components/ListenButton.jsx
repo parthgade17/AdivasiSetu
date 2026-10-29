@@ -31,12 +31,21 @@ export default function ListenButton({ scheme, small = true }) {
 
   return (
     <button
-      className={`btn btn-outline ${small ? 'btn-sm' : ''}`}
+      className={`btn ${playing ? 'btn-saffron' : 'btn-outline'} ${small ? 'btn-sm' : ''}`}
       onClick={onClick}
       aria-pressed={playing}
       title={playing ? t('stop') : `${t('listen')} (${lang.toUpperCase()})`}
+      style={{display:'inline-flex', alignItems:'center', gap:6, transition:'all 0.2s'}}
     >
-      {playing ? <Square size={13} /> : <Volume2 size={13} />} {playing ? t('stop') : t('listen')}
+      {playing ? <Square size={13} /> : <Volume2 size={13} />}
+      <span>{playing ? t('stop') : t('listen')}</span>
+      {playing && (
+        <span className="soundwave-container" style={{height:12, marginLeft:2}}>
+          <span className="soundwave-bar" style={{background:'white', width:2}}/>
+          <span className="soundwave-bar" style={{background:'white', width:2}}/>
+          <span className="soundwave-bar" style={{background:'white', width:2}}/>
+        </span>
+      )}
     </button>
   );
 }

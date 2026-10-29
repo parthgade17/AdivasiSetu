@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { Edit3, Save, CheckCircle, User, BookOpen, Home, CreditCard, Shield } from 'lucide-react';
+import { Edit3, Save, CheckCircle, User, BookOpen, Home, CreditCard, Shield, Link, Smartphone, Building2, Globe, UserCheck } from 'lucide-react';
 
 const SECTIONS = ['Personal', 'Academic', 'Financial', 'Bank Details'];
 
@@ -71,8 +71,8 @@ export default function Profile() {
           {/* Profile Card */}
           <div className="card">
             <div className="card-body" style={{textAlign:'center', padding:'28px 20px'}}>
-              <div style={{width:80, height:80, borderRadius:'50%', background:'linear-gradient(135deg, #003366, #1A5FAD)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:32, margin:'0 auto 14px', boxShadow:'0 4px 20px rgba(0,51,102,0.25)'}}>
-                👤
+              <div style={{width:80, height:80, borderRadius:'50%', background:'linear-gradient(135deg, #003366, #1A5FAD)', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 14px', boxShadow:'0 4px 20px rgba(0,51,102,0.25)', color:'white'}}>
+                <User size={38} />
               </div>
               <div style={{fontSize:18, fontWeight:800, color:'#003366'}}>{profile.name}</div>
               <div style={{fontSize:12, color:'#68738F', marginTop:3}}>{[profile.tribe, [profile.district, profile.state].filter(Boolean).join(', ')].filter(Boolean).join(' · ')}</div>
@@ -111,15 +111,17 @@ export default function Profile() {
             <div className="card-header"><span className="card-title">Linked Accounts</span></div>
             <div className="card-body">
               {[
-                {icon:'🔗', name:'DigiLocker', status:'Connected', color:'#1B7A3E'},
-                {icon:'📱', name:'Mobile (OTP)', status:'Verified', color:'#1B7A3E'},
-                {icon:'🏦', name:'Bank Account', status:'Verified', color:'#1B7A3E'},
-                {icon:'🌐', name:'NSP Portal', status:'Not Linked', color:'#D4800A'},
+                {icon: Link, name:'DigiLocker', status:'Connected', color:'#16A34A', bg:'#F0FDF4'},
+                {icon: Smartphone, name:'Mobile (OTP)', status:'Verified', color:'#16A34A', bg:'#F0FDF4'},
+                {icon: Building2, name:'Bank Account (PFMS)', status:'Verified', color:'#16A34A', bg:'#F0FDF4'},
+                {icon: Globe, name:'NSP National Portal', status:'Not Linked', color:'#D97706', bg:'#FFFBEB'},
               ].map((a, i) => (
-                <div key={i} style={{display:'flex', alignItems:'center', gap:10, padding:'8px 0', borderBottom: i < 3 ? '1px solid #EFF1F7' : 'none'}}>
-                  <span style={{fontSize:20}}>{a.icon}</span>
-                  <div style={{flex:1, fontSize:13, fontWeight:500, color:'#1E2541'}}>{a.name}</div>
-                  <span style={{fontSize:12, fontWeight:700, color:a.color}}>{a.status}</span>
+                <div key={i} style={{display:'flex', alignItems:'center', gap:12, padding:'10px 0', borderBottom: i < 3 ? '1px solid #EFF1F7' : 'none'}}>
+                  <div style={{width:32, height:32, borderRadius:8, background:a.bg, color:a.color, display:'flex', alignItems:'center', justifyContent:'center'}}>
+                    <a.icon size={16} />
+                  </div>
+                  <div style={{flex:1, fontSize:13, fontWeight:600, color:'#1E293B'}}>{a.name}</div>
+                  <span style={{fontSize:11.5, fontWeight:700, color:a.color}}>{a.status}</span>
                 </div>
               ))}
             </div>

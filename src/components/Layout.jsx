@@ -41,7 +41,10 @@ export default function Layout() {
   const handleLogout = async () => { await logout(); navigate('/'); };
 
   return (
-    <div className="app-shell">
+    <div className="app-shell" style={{display:'flex', flexDirection:'column'}}>
+      {/* Indian Tricolor Accent Hairline */}
+      <div className="tricolor-bar" />
+      <div style={{display:'flex', flex:1, width:'100%'}}>
       {/* Hidden hook for DOM translation */}
       <div id="google_translate_element" style={{ display: 'none' }} />
 
@@ -224,16 +227,16 @@ export default function Layout() {
           </div>
           <div className="topbar-right">
             {/* Topbar Universal Language Selector Dropdown */}
-            <div style={{display:'flex', alignItems:'center', gap:6, background:'#F0F4FA', padding:'4px 8px', borderRadius:8, border:'1px solid #DDE1EE'}}>
-              <Globe size={14} color="#003366" />
+            <div style={{display:'flex', alignItems:'center', gap:7, background:'#F0F4FA', padding:'5px 12px', borderRadius:20, border:'1.5px solid #D8E0EE', transition:'all 0.2s', boxShadow:'0 1px 3px rgba(0,33,71,0.04)'}}>
+              <Globe size={15} color="#003366" />
               <select
                 value={lang}
                 onChange={(e) => setLang(e.target.value)}
                 style={{
                   border:'none',
                   background:'transparent',
-                  fontSize:12,
-                  fontWeight:600,
+                  fontSize:12.5,
+                  fontWeight:700,
                   color:'#003366',
                   cursor:'pointer',
                   outline:'none'
@@ -241,7 +244,7 @@ export default function Layout() {
               >
                 {LANGUAGES.map(l => (
                   <option key={l.code} value={l.code}>
-                    {l.native} ({l.short})
+                    {l.native} ({l.label})
                   </option>
                 ))}
               </select>
@@ -262,8 +265,13 @@ export default function Layout() {
                 {unread > 0 && <div className="notif-dot"></div>}
               </div>
             )}
-            <div className="user-avatar" style={{cursor: hasStudentArea ? 'pointer' : 'default'}} onClick={() => hasStudentArea && navigate('/profile')}>
-              {initial}
+            <div style={{display:'flex', alignItems:'center', gap:8}}>
+              <div className="user-avatar" style={{cursor: hasStudentArea ? 'pointer' : 'default'}} onClick={() => hasStudentArea && navigate('/profile')}>
+                {initial}
+              </div>
+              <div style={{display:'none'}} className="topbar-user-badge">
+                <span style={{fontSize:11, fontWeight:700, color:'#003366'}}>{displayName}</span>
+              </div>
             </div>
           </div>
         </header>
@@ -272,6 +280,7 @@ export default function Layout() {
           <Outlet />
         </div>
       </main>
+      </div>
 
       <BottomNav />
       {/* Floating Interactive AI Voice Assistant */}

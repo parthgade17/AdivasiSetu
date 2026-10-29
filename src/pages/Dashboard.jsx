@@ -71,10 +71,10 @@ export default function Dashboard() {
   const received = applications.filter(a => a.paymentStatus === 'disbursed')
     .reduce((sum, a) => sum + (parseInt(String(a.amount).replace(/[^\d]/g, ''), 10) || 0), 0);
   const studentStats = [
-    { label: t('appliedSchemes'), value: String(applications.length), icon: '📝', color: 'navy' },
-    { label: t('approved'), value: String(applications.filter(a => a.status === 'approved').length), icon: '✅', color: 'green' },
-    { label: t('inProgress'), value: String(applications.filter(a => ['pending', 'under_review', 'queued'].includes(a.status)).length), icon: '⏳', color: 'amber' },
-    { label: t('totalReceived'), value: `₹${received.toLocaleString('en-IN')}`, icon: '💰', color: 'saffron' },
+    { label: t('appliedSchemes'), value: String(applications.length), icon: FileText, color: 'navy' },
+    { label: t('approved'), value: String(applications.filter(a => a.status === 'approved').length), icon: CheckCircle, color: 'green' },
+    { label: t('inProgress'), value: String(applications.filter(a => ['pending', 'under_review', 'queued'].includes(a.status)).length), icon: Clock, color: 'amber' },
+    { label: t('totalReceived'), value: `₹${received.toLocaleString('en-IN')}`, icon: IndianRupee, color: 'saffron' },
   ];
   const missingDocs = documents.filter(d => d.mandatory && ['missing', 'quality_issue'].includes(d.status)).length;
   const profileIncomplete = !profile?.course || !profile?.income;
@@ -85,41 +85,55 @@ export default function Dashboard() {
 
   return (
     <div className="fade-in">
-      {/* Page Header */}
-      <div className="page-header" style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start'}}>
-        <div>
-          <h1 className="page-title">
-            {isAdmin ? t('admin') : `👋 ${t('welcome', { name: firstName || 'Student' })}`}
-          </h1>
-          <p className="page-subtitle">
-            {isAdmin
-              ? 'District-wise application insights and performance metrics'
-              : 'Track your scholarship applications and upcoming deadlines.'}
-          </p>
+      {/* Student Welcome Banner */}
+      {!isAdmin && (
+        <div className="welcome-banner">
+          <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:16}}>
+            <div>
+              <div style={{display:'inline-flex', alignItems:'center', gap:6, background:'rgba(255,255,255,0.15)', padding:'3px 12px', borderRadius:20, fontSize:11.5, fontWeight:600, marginBottom:10}}>
+                🏛️ Ministry of Tribal Affairs · Government of India
+              </div>
+              <h2 style={{fontSize:24, fontWeight:900, marginBottom:4, letterSpacing:'-0.3px'}}>
+                {t('welcome', { name: firstName || 'Student' })} 👋
+              </h2>
+              <p style={{fontSize:13.5, color:'rgba(255,255,255,0.85)', maxWidth:560, lineHeight:1.6}}>
+                Explore 47+ Central & State tribal scholarship schemes. Instant eligibility verification and real-time status.
+              </p>
+            </div>
+            <div style={{display:'flex', gap:10, flexWrap:'wrap'}}>
+              <button className="btn btn-saffron" onClick={() => navigate('/eligibility')} style={{boxShadow:'0 4px 14px rgba(255,107,26,0.35)'}}>
+                <span>{t('checkEligibility')}</span> <ArrowRight size={15}/>
+              </button>
+              <button className="btn" onClick={() => navigate('/documents')} style={{background:'rgba(255,255,255,0.12)', border:'1px solid rgba(255,255,255,0.3)', color:'white'}}>
+                {t('uploadDocs')}
+              </button>
+            </div>
+          </div>
         </div>
-        <div style={{display:'flex', gap:8}}>
-          {!isAdmin && (
-            <button className="btn btn-saffron" onClick={() => navigate('/eligibility')}>
-              <span>{t('checkEligibility')}</span> <ArrowRight size={14}/>
-            </button>
-          )}
-          {isAdmin && (
-            <button className="btn btn-outline" style={{fontSize:12}} onClick={() => navigate('/admin')}>
-              <span>Open full analytics</span>
-            </button>
-          )}
+      )}
+
+      {/* Admin Page Header */}
+      {isAdmin && (
+        <div className="page-header" style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start'}}>
+          <div>
+            <h1 className="page-title">{t('admin')}</h1>
+            <p className="page-subtitle">District-wise application insights and performance metrics</p>
+          </div>
+          <button className="btn btn-outline" style={{fontSize:12}} onClick={() => navigate('/admin')}>
+            <span>Open full analytics</span>
+          </button>
         </div>
-      </div>
+      )}
 
       {/* Alert: incomplete profile (student only) */}
       {!isAdmin && (profileIncomplete || missingDocs > 0) && (
-        <div className="alert alert-warning" style={{cursor:'pointer'}} onClick={() => navigate(profileIncomplete ? '/eligibility' : '/documents')}>
-          <AlertCircle size={16}/>
-          <div>
+        <div className="alert alert-warning" style={{cursor:'pointer', borderLeft:'4px solid var(--amber-warn)', borderRadius:12}} onClick={() => navigate(profileIncomplete ? '/eligibility' : '/documents')}>
+          <AlertCircle size={18} style={{flexShrink:0, marginTop:2}}/>
+          <div style={{flex:1}}>
             {profileIncomplete
-              ? <><strong>{t('profileIncompleteAlert')}</strong></>
-              : <><strong>{t('missingDocsAlert')}</strong></>}
-            <span style={{marginLeft:8, textDecoration:'underline', fontWeight:600}}>{profileIncomplete ? t('completeProfile') : t('uploadDocs')}</span>
+              ? <strong>{t('profileIncompleteAlert')}</strong>
+              : <strong>{t('missingDocsAlert')}</strong>}
+            <span style={{marginLeft:8, textDecoration:'underline', fontWeight:700, color:'var(--navy)'}}>{profileIncomplete ? t('completeProfile') : t('uploadDocs')} →</span>
           </div>
         </div>
       )}
@@ -164,7 +178,9 @@ export default function Dashboard() {
         ) : (
           studentStats.map((s, i) => (
             <div key={i} className={`stat-card ${s.color}`}>
-              <div className={`stat-icon ${s.color}`} style={{fontSize:24}}>{s.icon}</div>
+              <div className={`stat-icon ${s.color}`}>
+                <s.icon size={22} />
+              </div>
               <div className="stat-info">
                 <div className="stat-value">{s.value}</div>
                 <div className="stat-label">{s.label}</div>

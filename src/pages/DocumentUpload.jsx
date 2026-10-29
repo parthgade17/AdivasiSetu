@@ -1,13 +1,17 @@
 import { useRef, useState } from 'react';
-import { Upload, AlertCircle, Trash2, RefreshCw, Link, Eye } from 'lucide-react';
+import {
+  Upload, AlertCircle, Trash2, RefreshCw, Link, Eye,
+  CheckCircle2, Clock, AlertTriangle, UploadCloud, FileText,
+  Camera, Sun, Maximize2, ShieldCheck, Sparkles
+} from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { api } from '../services/api';
 
 const statusConfig = {
-  verified: { color: '#1B7A3E', bg: '#E8F5ED', icon: '✅', label: 'Verified' },
-  pending_review: { color: '#1565C0', bg: '#E3F0FF', icon: '⏳', label: 'Under Review' },
-  quality_issue: { color: '#C0392B', bg: '#FDECEA', icon: '⚠️', label: 'Quality Issue' },
-  missing: { color: '#68738F', bg: '#F4F6FB', icon: '📤', label: 'Not Uploaded' },
+  verified: { color: '#16A34A', bg: '#F0FDF4', border: '#BBF7D0', icon: <CheckCircle2 size={16}/>, label: 'Verified' },
+  pending_review: { color: '#0284C7', bg: '#F0F9FF', border: '#BAE6FD', icon: <Clock size={16}/>, label: 'Under Review' },
+  quality_issue: { color: '#DC2626', bg: '#FEF2F2', border: '#FECACA', icon: <AlertTriangle size={16}/>, label: 'Quality Issue' },
+  missing: { color: '#64748B', bg: '#F8FAFC', border: '#E2E8F0', icon: <UploadCloud size={16}/>, label: 'Not Uploaded' },
 };
 
 export default function DocumentUpload() {
@@ -36,7 +40,7 @@ export default function DocumentUpload() {
 
   const viewFile = async (docType) => {
     if (!online) { toast(t('needsInternet'), 'error'); return; }
-    const tab = window.open('', '_blank'); // open first so the popup blocker allows it
+    const tab = window.open('', '_blank');
     try {
       const blob = await api.documentFile(docType, studentParams || {});
       const url = URL.createObjectURL(blob);
@@ -61,52 +65,71 @@ export default function DocumentUpload() {
       <div className="page-header">
         <h1 className="page-title">{t('documents')}</h1>
         <input ref={fileInput} type="file" accept="image/*,application/pdf" capture="environment" className="file-input-hidden" onChange={onFileChosen} aria-hidden="true" tabIndex={-1}/>
-        <p className="page-subtitle">Upload and verify all documents required for scholarship applications.</p>
+        <p className="page-subtitle">Upload verified certificates or sync directly via DigiLocker for instant scheme approval.</p>
       </div>
 
       {/* DigiLocker Banner */}
-      <div style={{background:'linear-gradient(135deg, #003366, #1A5FAD)', borderRadius:12, padding:'20px 24px', marginBottom:20, display:'flex', alignItems:'center', gap:16}}>
-        <div style={{fontSize:36}}>🔗</div>
-        <div style={{flex:1}}>
-          <div style={{fontSize:15, fontWeight:700, color:'white', marginBottom:4}}>{t('digiLockerBanner')}</div>
-          <div style={{fontSize:12, color:'rgba(255,255,255,0.7)'}}>{t('digiLockerDesc')}</div>
+      <div style={{background:'linear-gradient(135deg, #002147 0%, #0A3A6B 50%, #0B5299 100%)', borderRadius:16, padding:'24px 28px', marginBottom:22, display:'flex', alignItems:'center', gap:20, color:'white', boxShadow:'0 4px 18px rgba(0,33,71,0.15)', flexWrap:'wrap'}}>
+        <div style={{width:54, height:54, borderRadius:14, background:'rgba(255,255,255,0.12)', border:'1.5px solid rgba(255,255,255,0.25)', display:'flex', alignItems:'center', justifyContent:'center', color:'#FFD700', flexShrink:0}}>
+          <ShieldCheck size={28} />
+        </div>
+        <div style={{flex:1, minWidth:260}}>
+          <div style={{display:'inline-flex', alignItems:'center', gap:6, background:'rgba(255,215,0,0.15)', padding:'3px 10px', borderRadius:20, fontSize:11, fontWeight:700, color:'#FFD700', marginBottom:6}}>
+            <Sparkles size={12}/> OFFICIAL INTEGRATION
+          </div>
+          <div style={{fontSize:16, fontWeight:800, marginBottom:3}}>{t('digiLockerBanner')}</div>
+          <div style={{fontSize:12.5, color:'rgba(255,255,255,0.85)', lineHeight:1.5}}>{t('digiLockerDesc')}</div>
         </div>
         <button
           onClick={handleDigilocker}
           disabled={digilockerDone || digilockerLoading}
           style={{
-            padding:'11px 22px', borderRadius:10, fontSize:13, fontWeight:700, border:'none', cursor:'pointer',
-            background: digilockerDone ? '#1B7A3E' : 'white',
-            color: digilockerDone ? 'white' : '#003366',
+            padding:'12px 24px', borderRadius:12, fontSize:13.5, fontWeight:800, border:'none', cursor:'pointer',
+            background: digilockerDone ? 'var(--green-success)' : 'white',
+            color: digilockerDone ? 'white' : '#002147',
             display:'flex', alignItems:'center', gap:8, flexShrink:0,
-            opacity: digilockerLoading ? 0.7 : 1
+            boxShadow:'0 4px 14px rgba(0,0,0,0.15)',
+            opacity: digilockerLoading ? 0.7 : 1,
+            transition:'all 0.2s'
           }}
         >
-          {digilockerLoading ? <><RefreshCw size={14} className="spin"/> Loading…</> :
-            digilockerDone ? <>✅ {t('verified')}</> : <><Link size={14}/> {t('connectDigiLocker')}{config.digilockerMode === 'mock' ? ' (simulated)' : ''}</>}
+          {digilockerLoading ? <><RefreshCw size={15} className="spin"/> Fetching…</> :
+            digilockerDone ? <><CheckCircle2 size={16}/> {t('verified')}</> : <><Link size={15}/> {t('connectDigiLocker')}{config.digilockerMode === 'mock' ? ' (simulated)' : ''}</>}
         </button>
       </div>
 
       {/* Progress Overview */}
-      <div className="card" style={{marginBottom:20}}>
+      <div className="card" style={{marginBottom:22, borderRadius:14}}>
         <div className="card-body" style={{padding:'20px 24px'}}>
           <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12}}>
             <div>
-              <div style={{fontSize:14, fontWeight:700, color:'#003366'}}>Document Completeness</div>
-              <div style={{fontSize:12, color:'#68738F', marginTop:2}}>{verified} of {total} mandatory documents verified</div>
+              <div style={{fontSize:15, fontWeight:800, color:'#002147'}}>Document Completeness</div>
+              <div style={{fontSize:12.5, color:'#64748B', marginTop:3}}>
+                {verified} of {total} mandatory documents verified
+              </div>
             </div>
-            <div style={{fontSize:28, fontWeight:900, color: completePct >= 80 ? '#1B7A3E' : '#D4800A'}}>{completePct}%</div>
+            <div style={{fontSize:28, fontWeight:900, color: completePct >= 80 ? 'var(--green-success)' : 'var(--amber-warn)'}}>
+              {completePct}%
+            </div>
           </div>
-          <div className="progress-bar-wrap" style={{height:12}}>
-            <div className="progress-bar" style={{width:`${completePct}%`, background: completePct >= 80 ? 'linear-gradient(90deg,#1B7A3E,#27AE60)' : 'linear-gradient(90deg,#D4800A,#F39C12)'}}/>
+
+          <div className="progress-bar-wrap" style={{height:10, borderRadius:6}}>
+            <div
+              className="progress-bar"
+              style={{
+                width:`${completePct}%`,
+                background: completePct >= 80 ? 'linear-gradient(90deg,#16A34A,#22C55E)' : 'linear-gradient(90deg,#D97706,#F59E0B)'
+              }}
+            />
           </div>
-          <div style={{display:'flex', gap:16, marginTop:12, flexWrap:'wrap'}}>
+
+          <div style={{display:'flex', gap:18, marginTop:14, flexWrap:'wrap'}}>
             {Object.entries(statusConfig).map(([key, val]) => {
               const count = docs.filter(d => d.status === key).length;
               return count > 0 ? (
-                <div key={key} style={{display:'flex', alignItems:'center', gap:6, fontSize:12}}>
+                <div key={key} style={{display:'flex', alignItems:'center', gap:6, fontSize:12.5}}>
                   <span style={{width:8, height:8, borderRadius:'50%', background:val.color, display:'inline-block'}}/>
-                  <span style={{color:'#68738F'}}>{val.label}: <strong style={{color:val.color}}>{count}</strong></span>
+                  <span style={{color:'#64748B'}}>{val.label}: <strong style={{color:val.color}}>{count}</strong></span>
                 </div>
               ) : null;
             })}
@@ -116,101 +139,104 @@ export default function DocumentUpload() {
 
       {/* Quality Issue Alert */}
       {issues.length > 0 && (
-        <div className="alert alert-error">
-          <AlertCircle size={16}/>
-          <div>
-            <strong>{issues.length} document{issues.length > 1 ? 's have' : ' has'} a quality issue</strong> —{' '}
+        <div className="alert alert-error" style={{borderRadius:12, marginBottom:20}}>
+          <AlertCircle size={18} style={{flexShrink:0, marginTop:1}}/>
+          <div style={{fontSize:13}}>
+            <strong>{issues.length} document{issues.length > 1 ? 's have' : ' has'} quality issues:</strong>{' '}
             {issues.map(d => `${d.name}: ${(d.issues || []).join(' ') || 'unclear photo'}`).join(' · ')}. Please re-upload a clear, well-lit image.
           </div>
         </div>
       )}
 
       {/* Document List */}
-      <div className="card">
+      <div className="card" style={{borderRadius:14, overflow:'hidden'}}>
         <div className="card-header">
-          <span className="card-title">Required Documents</span>
-          <div style={{display:'flex', gap:8}}>
-
-          </div>
+          <span className="card-title">Required Supporting Documents</span>
         </div>
-        <div style={{padding:'8px 0'}}>
+        <div>
           {docs.map((doc, i) => {
-            const sc = statusConfig[doc.status];
+            const sc = statusConfig[doc.status] || statusConfig.missing;
             return (
-              <div key={doc.id} style={{
-                display:'flex', gap:14, alignItems:'center', padding:'14px 20px',
-                borderBottom: i < docs.length-1 ? '1px solid #EFF1F7' : 'none',
-                transition:'background 0.15s'
-              }}
-                onMouseEnter={e => e.currentTarget.style.background='#F8F9FC'}
+              <div
+                key={doc.id}
+                style={{
+                  display:'flex', gap:16, alignItems:'center', padding:'16px 22px',
+                  borderBottom: i < docs.length-1 ? '1px solid #F1F5F9' : 'none',
+                  transition:'background 0.15s'
+                }}
+                onMouseEnter={e => e.currentTarget.style.background='#F8FAFC'}
                 onMouseLeave={e => e.currentTarget.style.background='transparent'}
               >
                 {/* Icon */}
-                <div style={{width:44, height:44, borderRadius:10, background:sc.bg, display:'flex', alignItems:'center', justifyContent:'center', fontSize:20, flexShrink:0}}>
+                <div style={{width:44, height:44, borderRadius:12, background:sc.bg, border:`1px solid ${sc.border}`, color:sc.color, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0}}>
                   {sc.icon}
                 </div>
 
                 {/* Info */}
                 <div style={{flex:1}}>
-                  <div style={{display:'flex', gap:6, alignItems:'center'}}>
-                    <span style={{fontSize:13, fontWeight:700, color:'#1E2541'}}>{doc.name}</span>
-                    {doc.mandatory && <span className="badge badge-red" style={{padding:'1px 6px', fontSize:10}}>Required</span>}
-                    {!doc.mandatory && <span className="badge badge-navy" style={{padding:'1px 6px', fontSize:10}}>Optional</span>}
+                  <div style={{display:'flex', gap:8, alignItems:'center', flexWrap:'wrap'}}>
+                    <span style={{fontSize:13.5, fontWeight:700, color:'#002147'}}>{doc.name}</span>
+                    {doc.mandatory && <span className="badge badge-red" style={{padding:'2px 8px', fontSize:10.5}}>Required</span>}
+                    {!doc.mandatory && <span className="badge badge-navy" style={{padding:'2px 8px', fontSize:10.5}}>Optional</span>}
                   </div>
-                  <div style={{fontSize:11, color:'#68738F', marginTop:2}}>{doc.desc}</div>
+                  <div style={{fontSize:12, color:'#64748B', marginTop:3}}>{doc.desc}</div>
                   {doc.file && (
                     <div style={{display:'flex', gap:8, alignItems:'center', marginTop:4}}>
-                      <span style={{fontSize:11, color:'#1A5FAD', fontWeight:500}}>📎 {doc.file}</span>
-                      {doc.uploadDate && <span style={{fontSize:10, color:'#9AA3BC'}}>· {doc.uploadDate}</span>}
+                      <span style={{fontSize:11.5, color:'#0284C7', fontWeight:600}}>📎 {doc.file}</span>
+                      {doc.uploadDate && <span style={{fontSize:11, color:'#94A3B8'}}>· {doc.uploadDate}</span>}
                     </div>
                   )}
-                  {/* Quality bar */}
+                  {/* Quality rating */}
                   {doc.quality != null && (
                     <div style={{display:'flex', alignItems:'center', gap:8, marginTop:5}}>
-                      <div className="progress-bar-wrap" style={{width:100}}>
+                      <div className="progress-bar-wrap" style={{width:100, height:6}}>
                         <div className="progress-bar" style={{
                           width:`${doc.quality}%`,
-                          background: doc.quality >= 80 ? 'var(--green-success)' : doc.quality >= 60 ? '#F39C12' : '#C0392B'
+                          background: doc.quality >= 80 ? 'var(--green-success)' : doc.quality >= 60 ? '#F59E0B' : '#DC2626'
                         }}/>
                       </div>
-                      <span style={{fontSize:10, color: doc.quality >= 80 ? '#1B7A3E' : '#C0392B', fontWeight:700}}>
+                      <span style={{fontSize:11, color: doc.quality >= 80 ? '#16A34A' : '#DC2626', fontWeight:700}}>
                         {doc.quality}% Quality
                       </span>
                     </div>
                   )}
                 </div>
 
-                {/* Status */}
+                {/* Status Badge */}
                 <div style={{flexShrink:0}}>
-                  <span style={{padding:'4px 10px', borderRadius:20, fontSize:11, fontWeight:700, background:sc.bg, color:sc.color}}>
+                  <span style={{padding:'4px 12px', borderRadius:20, fontSize:11.5, fontWeight:700, background:sc.bg, color:sc.color, border:`1px solid ${sc.border}`}}>
                     {sc.label}
                   </span>
                 </div>
 
                 {/* Actions */}
-                <div style={{display:'flex', gap:6, flexShrink:0}}>
+                <div style={{display:'flex', gap:8, flexShrink:0}}>
                   {doc.hasFile && (
-                    <button className="btn btn-outline btn-sm btn-icon" title="View file" aria-label={`View ${doc.name}`} onClick={() => viewFile(doc.id)}>
-                      <Eye size={12}/>
+                    <button className="btn btn-outline btn-sm btn-icon" title="View document" aria-label={`View ${doc.name}`} onClick={() => viewFile(doc.id)}>
+                      <Eye size={14}/>
                     </button>
                   )}
                   {doc.status === 'missing' || doc.status === 'quality_issue' ? (
                     <button
                       disabled={uploading === doc.id}
-                      style={{
-                        padding:'7px 12px', borderRadius:7, fontSize:12, fontWeight:700, border:'none',
-                        background:'#003366', color:'white', cursor:'pointer', display:'flex', alignItems:'center', gap:6
-                      }}
+                      className="btn btn-primary btn-sm"
                       onClick={() => pickFile(doc.id)}
                     >
-                      {uploading === doc.id ? <><RefreshCw size={12} className="spin"/> Checking…</> :
-                        <><Upload size={12}/> {doc.status === 'quality_issue' ? 'Re-upload' : 'Upload'}</>}
+                      {uploading === doc.id ? (
+                        <><RefreshCw size={13} className="spin"/> Checking…</>
+                      ) : (
+                        <><Upload size={13}/> {doc.status === 'quality_issue' ? 'Re-upload' : 'Upload'}</>
+                      )}
                     </button>
                   ) : (
-                    <button className="btn btn-outline btn-sm btn-icon" title="Remove" aria-label={`Remove ${doc.name}`} style={{color:'#C0392B'}}
+                    <button
+                      className="btn btn-outline btn-sm btn-icon"
+                      title="Remove"
+                      aria-label={`Remove ${doc.name}`}
+                      style={{color:'#DC2626'}}
                       onClick={() => deleteDocument(doc.id)}
                     >
-                      <Trash2 size={12}/>
+                      <Trash2 size={13}/>
                     </button>
                   )}
                 </div>
@@ -220,21 +246,24 @@ export default function DocumentUpload() {
         </div>
       </div>
 
-      {/* Tips */}
-      <div className="card" style={{marginTop:16}}>
+      {/* Photo Upload Tips */}
+      <div className="card" style={{marginTop:20, borderRadius:14}}>
         <div className="card-header">
-          <span className="card-title">📸 Document Photo Tips</span>
+          <span className="card-title">📸 Photo & Document Upload Guidelines</span>
         </div>
         <div className="card-body">
-          <div className="grid-2" style={{gap:12}}>
+          <div className="grid-2" style={{gap:14}}>
             {[
-              {tip:'Use good natural lighting — avoid shadows on the document', icon:'☀️'},
-              {tip:'Keep the camera steady — blurry images will be rejected', icon:'📷'},
-              {tip:'Include all four corners of the document in the frame', icon:'🔲'},
-              {tip:'Ensure all text is clearly readable before uploading', icon:'🔤'},
+              {tip:'Use clean natural lighting — avoid harsh shadows or flash reflections', icon: Sun, color: '#D97706', bg: '#FFFBEB'},
+              {tip:'Keep the camera steady — blurry or distorted scans cannot be verified', icon: Camera, color: '#0284C7', bg: '#F0F9FF'},
+              {tip:'Capture all four edges and corners of the certificate within frame', icon: Maximize2, color: '#16A34A', bg: '#F0FDF4'},
+              {tip:'Verify all text, stamps, barcode, and names are clearly legible', icon: FileText, color: '#7C3AED', bg: '#FAF5FF'},
             ].map((t, i) => (
-              <div key={i} style={{display:'flex', gap:10, padding:'10px', background:'#F8F9FC', borderRadius:8, fontSize:12, color:'#4B5470'}}>
-                <span>{t.icon}</span> {t.tip}
+              <div key={i} style={{display:'flex', gap:12, padding:'12px 14px', background:'#F8FAFC', borderRadius:10, fontSize:12.5, color:'#334155', border:'1px solid #E2E8F0', alignItems:'center'}}>
+                <div style={{width:32, height:32, borderRadius:8, background:t.bg, color:t.color, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0}}>
+                  <t.icon size={16} />
+                </div>
+                <span>{t.tip}</span>
               </div>
             ))}
           </div>

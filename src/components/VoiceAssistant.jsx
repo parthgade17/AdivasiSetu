@@ -303,30 +303,45 @@ export default function VoiceAssistant() {
           </div>
 
           {/* Status Banner when listening or speaking */}
-          {listening && (
+          {(listening || speaking) && (
             <div
               style={{
-                background: '#FFF3DC',
-                color: '#D4800A',
-                padding: '8px 14px',
+                background: listening ? '#FFF7ED' : '#F0F9FF',
+                color: listening ? 'var(--saffron-dark)' : '#0284C7',
+                padding: '8px 16px',
                 fontSize: 12,
-                fontWeight: 600,
+                fontWeight: 700,
                 display: 'flex',
                 alignItems: 'center',
-                gap: 8,
-                borderBottom: '1px solid #FFE4B2',
-                animation: 'pulse 1.5s infinite',
+                justifyContent: 'space-between',
+                borderBottom: `1px solid ${listening ? '#FFEDD5' : '#BAE6FD'}`,
               }}
             >
-              <div
-                style={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: '50%',
-                  background: '#FF6B1A',
-                }}
-              />
-              {t('listeningInLang', { lang: langLabel })}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: '50%',
+                    background: listening ? '#FF6B1A' : '#0284C7',
+                    animation: 'pulse 1.5s infinite',
+                  }}
+                />
+                <span>
+                  {listening
+                    ? t('listeningInLang', { lang: langLabel })
+                    : `Speaking in ${langLabel}…`}
+                </span>
+              </div>
+
+              {/* Animated Soundwave */}
+              <div className="soundwave-container">
+                <div className="soundwave-bar" style={{background: listening ? 'var(--saffron)' : '#0284C7'}} />
+                <div className="soundwave-bar" style={{background: listening ? 'var(--saffron)' : '#0284C7'}} />
+                <div className="soundwave-bar" style={{background: listening ? 'var(--saffron)' : '#0284C7'}} />
+                <div className="soundwave-bar" style={{background: listening ? 'var(--saffron)' : '#0284C7'}} />
+                <div className="soundwave-bar" style={{background: listening ? 'var(--saffron)' : '#0284C7'}} />
+              </div>
             </div>
           )}
 

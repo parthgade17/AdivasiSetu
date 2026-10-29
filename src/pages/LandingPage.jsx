@@ -1,6 +1,10 @@
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-import { ArrowRight, Globe } from 'lucide-react';
+import {
+  ArrowRight, Globe, Search, CheckCircle2, FolderSync,
+  Mic2, WifiOff, Users2, GraduationCap, Award, ShieldCheck,
+  ChevronRight, Calendar, Sparkles, Building2
+} from 'lucide-react';
 import { LANGUAGES } from '../i18n';
 import VoiceAssistant from '../components/VoiceAssistant';
 
@@ -15,19 +19,19 @@ export default function LandingPage() {
   };
 
   const features = [
-    { icon: '🔍', title: t('feature1Title'), desc: t('feature1Desc') },
-    { icon: '✅', title: t('feature2Title'), desc: t('feature2Desc') },
-    { icon: '📁', title: t('feature3Title'), desc: t('feature3Desc') },
-    { icon: '🗣️', title: t('feature4Title'), desc: t('feature4Desc') },
-    { icon: '📶', title: t('feature5Title'), desc: t('feature5Desc') },
-    { icon: '👨‍🏫', title: t('feature6Title'), desc: t('feature6Desc') },
+    { icon: Search, title: t('feature1Title'), desc: t('feature1Desc'), color: '#003366', bg: '#EFF6FF' },
+    { icon: CheckCircle2, title: t('feature2Title'), desc: t('feature2Desc'), color: '#16A34A', bg: '#F0FDF4' },
+    { icon: FolderSync, title: t('feature3Title'), desc: t('feature3Desc'), color: '#FF6B1A', bg: '#FFF7ED' },
+    { icon: Mic2, title: t('feature4Title'), desc: t('feature4Desc'), color: '#D97706', bg: '#FFFBEB' },
+    { icon: WifiOff, title: t('feature5Title'), desc: t('feature5Desc'), color: '#0284C7', bg: '#F0F9FF' },
+    { icon: Users2, title: t('feature6Title'), desc: t('feature6Desc'), color: '#7C3AED', bg: '#FAF5FF' },
   ];
 
   const stats = [
     { value: '47+', label: t('activeSchemes'), color: '#FF6B1A' },
     { value: '12 L+', label: t('studentsCovered'), color: '#FFD700' },
-    { value: '28', label: t('statesUTs'), color: '#4CAF50' },
-    { value: '₹1.2 Cr', label: t('avgDisbursed'), color: '#29B6F6' },
+    { value: '28', label: t('statesUTs'), color: '#4ADE80' },
+    { value: '₹12.4 Cr', label: t('avgDisbursed'), color: '#60A5FA' },
   ];
 
   const schemes = [
@@ -39,17 +43,25 @@ export default function LandingPage() {
   ];
 
   return (
-    <div style={{minHeight:'100vh', fontFamily:'Inter, sans-serif', background:'#F4F6FB'}}>
+    <div style={{minHeight:'100vh', fontFamily:'Inter, -apple-system, sans-serif', background:'#F8FAFC', color:'#1E293B'}}>
       <div id="google_translate_element" style={{ display: 'none' }} />
 
-      {/* Government Top Bar */}
-      <div style={{background:'#002147', padding:'7px 32px', display:'flex', alignItems:'center', justifyContent:'space-between', fontSize:11, color:'rgba(255,255,255,0.85)', flexWrap:'wrap', gap:8}}>
-        <div style={{display:'flex', alignItems:'center', gap:16}}>
-          <span>{t('heroGovtBar')}</span>
-        </div>
+      {/* Indian National Tricolor Accent Bar */}
+      <div className="tricolor-bar" />
+
+      {/* Official Government of India Header Strip */}
+      <div style={{background:'#001E3D', padding:'8px 32px', display:'flex', alignItems:'center', justifyContent:'space-between', fontSize:11.5, color:'rgba(255,255,255,0.85)', flexWrap:'wrap', gap:10}}>
         <div style={{display:'flex', alignItems:'center', gap:12}}>
-          <div style={{display:'flex', alignItems:'center', gap:4, background:'rgba(255,255,255,0.12)', padding:'2px 8px', borderRadius:4}}>
-            <Globe size={12} color="#FFD700" />
+          <span style={{display:'inline-flex', alignItems:'center', gap:6, fontWeight:600}}>
+            🇮🇳 {t('heroGovtBar')}
+          </span>
+          <span style={{opacity:0.4}}>|</span>
+          <span style={{opacity:0.8}}>Ministry of Tribal Affairs (MoTA)</span>
+        </div>
+
+        <div style={{display:'flex', alignItems:'center', gap:12}}>
+          <div style={{display:'flex', alignItems:'center', gap:6, background:'rgba(255,255,255,0.12)', padding:'4px 10px', borderRadius:20, border:'1px solid rgba(255,255,255,0.2)'}}>
+            <Globe size={13} color="#FFD700" />
             <select
               value={lang}
               onChange={(e) => setLang(e.target.value)}
@@ -57,72 +69,78 @@ export default function LandingPage() {
                 background: 'transparent',
                 border: 'none',
                 color: 'white',
-                fontSize: 11,
-                fontWeight: 600,
+                fontSize: 11.5,
+                fontWeight: 700,
                 cursor: 'pointer',
                 outline: 'none',
               }}
             >
               {LANGUAGES.map((l) => (
                 <option key={l.code} value={l.code} style={{ color: '#002147', background: 'white' }}>
-                  {l.native} ({l.label})
+                  {l.native} — {l.label}
                 </option>
               ))}
             </select>
           </div>
-          <div style={{display:'flex', gap:6}}>
-            {LANGUAGES.slice(0, 4).map((l) => (
-              <span
+
+          <div style={{display:'flex', gap:4}}>
+            {LANGUAGES.slice(0, 5).map((l) => (
+              <button
                 key={l.code}
                 style={{
-                  cursor:'pointer',
-                  padding: '2px 6px',
-                  borderRadius: 4,
-                  fontWeight: lang === l.code ? 700 : 400,
-                  background: lang === l.code ? 'var(--saffron)' : 'transparent',
-                  color: lang === l.code ? 'white' : 'rgba(255,255,255,0.8)'
+                  padding: '3px 8px',
+                  borderRadius: 6,
+                  fontSize: 11,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  border: '1px solid',
+                  transition: 'all 0.15s',
+                  background: lang === l.code ? 'var(--saffron)' : 'rgba(255,255,255,0.06)',
+                  borderColor: lang === l.code ? 'var(--saffron)' : 'rgba(255,255,255,0.2)',
+                  color: lang === l.code ? 'white' : 'rgba(255,255,255,0.85)'
                 }}
                 onClick={() => setLang(l.code)}
               >
                 {l.native}
-              </span>
+              </button>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Header */}
-      <header style={{background:'white', borderBottom:'1px solid #DDE1EE', padding:'0 32px', display:'flex', alignItems:'center', justifyContent:'space-between', height:72, position:'sticky', top:0, zIndex:100, boxShadow:'0 2px 8px rgba(0,33,71,0.06)'}}>
-        <div style={{display:'flex', alignItems:'center', gap:16}}>
-          <div style={{width:48, height:48, background:'linear-gradient(135deg,#003366,#1A5FAD)', borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', fontSize:22}}>
-            🏛️
+      {/* Main Navigation Bar */}
+      <header style={{background:'rgba(255, 255, 255, 0.95)', backdropFilter:'blur(10px)', borderBottom:'1px solid #E2E8F0', padding:'0 36px', display:'flex', alignItems:'center', justifyContent:'space-between', height:76, position:'sticky', top:0, zIndex:100, boxShadow:'0 2px 10px rgba(0,33,71,0.04)'}}>
+        <div style={{display:'flex', alignItems:'center', gap:14}}>
+          <div style={{width:46, height:46, background:'linear-gradient(135deg, #002147 0%, #0A3A6B 100%)', borderRadius:12, display:'flex', alignItems:'center', justifyContent:'center', color:'white', boxShadow:'0 4px 12px rgba(0,33,71,0.25)', border:'2px solid #FFD700'}}>
+            <GraduationCap size={24} color="#FFD700" />
           </div>
           <div>
-            <div style={{fontWeight:800, fontSize:16, color:'#003366', lineHeight:1.2}}>{t('brand')}</div>
-            <div style={{fontSize:11, color:'#68738F'}}>{t('portalTagline')}</div>
+            <div style={{fontWeight:800, fontSize:18, color:'#002147', lineHeight:1.2, letterSpacing:'-0.3px'}}>{t('brand')}</div>
+            <div style={{fontSize:11.5, color:'#64748B', fontWeight:500}}>{t('portalTagline')}</div>
           </div>
         </div>
-        <nav style={{display:'flex', gap:20, alignItems:'center'}}>
+
+        <nav style={{display:'flex', gap:24, alignItems:'center'}}>
           {[
             { label: t('about'), path: '#about' },
             { label: t('scholarships'), path: '#schemes' },
-            { label: t('faqs'), path: '#faqs' },
+            { label: t('faqs'), path: '#how-it-works' },
           ].map((item) => (
-            <span
+            <a
               key={item.label}
-              style={{fontSize:13, fontWeight:500, color:'#4B5470', cursor:'pointer', transition:'color 0.2s'}}
-              onMouseEnter={(e) => (e.target.style.color = '#003366')}
-              onMouseLeave={(e) => (e.target.style.color = '#4B5470')}
+              href={item.path}
+              style={{fontSize:13.5, fontWeight:600, color:'#475569', transition:'color 0.2s', textDecoration:'none'}}
+              onMouseEnter={(e) => (e.target.style.color = '#002147')}
+              onMouseLeave={(e) => (e.target.style.color = '#475569')}
             >
               {item.label}
-            </span>
+            </a>
           ))}
 
           <button
             onClick={() => navigate('/login')}
-            style={{padding:'9px 20px', background:'#003366', color:'white', borderRadius:8, fontSize:13, fontWeight:600, border:'none', cursor:'pointer', transition:'all 0.2s'}}
-            onMouseEnter={(e) => (e.target.style.background = '#004488')}
-            onMouseLeave={(e) => (e.target.style.background = '#003366')}
+            className="btn btn-primary"
+            style={{padding:'10px 22px', fontSize:13.5, borderRadius:10, boxShadow:'0 2px 8px rgba(0,33,71,0.25)'}}
           >
             {t('loginRegister')}
           </button>
@@ -130,93 +148,148 @@ export default function LandingPage() {
       </header>
 
       {/* Hero Section */}
-      <section style={{background:'linear-gradient(160deg, #003366 0%, #004488 55%, #003D80 100%)', padding:'80px 32px 100px', textAlign:'center', position:'relative', overflow:'hidden'}}>
-        <div style={{position:'absolute', width:400, height:400, background:'rgba(255,107,26,0.08)', borderRadius:'50%', top:-150, right:-100}}/>
-        <div style={{position:'absolute', width:300, height:300, background:'rgba(255,215,0,0.05)', borderRadius:'50%', bottom:-100, left:-80}}/>
+      <section style={{background:'linear-gradient(160deg, #001E3D 0%, #003366 50%, #0A4A86 100%)', padding:'88px 32px 108px', textAlign:'center', position:'relative', overflow:'hidden', color:'white'}}>
+        {/* Subtle Ambient Radial Glows */}
+        <div style={{position:'absolute', width:500, height:500, background:'radial-gradient(circle, rgba(255,107,26,0.12) 0%, transparent 70%)', top:-200, right:-100, pointerEvents:'none'}}/>
+        <div style={{position:'absolute', width:450, height:450, background:'radial-gradient(circle, rgba(255,215,0,0.08) 0%, transparent 70%)', bottom:-150, left:-100, pointerEvents:'none'}}/>
 
-        <div style={{position:'relative', maxWidth:840, margin:'0 auto'}}>
-          <div style={{display:'inline-flex', alignItems:'center', gap:8, background:'rgba(255,107,26,0.15)', border:'1px solid rgba(255,107,26,0.3)', borderRadius:20, padding:'6px 16px', marginBottom:24, fontSize:12, color:'#FFA366', fontWeight:600}}>
-            ✨ BHASHINI MULTILINGUAL VOICE + DIGILOCKER
+        <div style={{position:'relative', maxWidth:880, margin:'0 auto'}}>
+          {/* Badge */}
+          <div style={{display:'inline-flex', alignItems:'center', gap:8, background:'rgba(255,107,26,0.15)', border:'1px solid rgba(255,107,26,0.35)', borderRadius:30, padding:'7px 18px', marginBottom:24, fontSize:12.5, color:'#FFA366', fontWeight:700, letterSpacing:'0.5px'}}>
+            <Sparkles size={14} color="#FF8C42" />
+            BHASHINI MULTILINGUAL VOICE · DIGILOCKER · OFFLINE SUPPORT
           </div>
-          <h1 style={{fontSize:44, fontWeight:900, color:'white', lineHeight:1.15, marginBottom:16}}>
+
+          <h1 style={{fontSize:46, fontWeight:900, lineHeight:1.15, marginBottom:20, letterSpacing:'-0.5px', textShadow:'0 2px 10px rgba(0,0,0,0.2)'}}>
             {t('heroTitle')}
           </h1>
-          <p style={{fontSize:16, color:'rgba(255,255,255,0.85)', maxWidth:620, margin:'0 auto 36px', lineHeight:1.7}}>
+
+          <p style={{fontSize:16.5, color:'rgba(255,255,255,0.85)', maxWidth:680, margin:'0 auto 38px', lineHeight:1.7, fontWeight:400}}>
             {t('heroSubtitle')}
           </p>
-          <div style={{display:'flex', gap:12, justifyContent:'center', flexWrap:'wrap'}}>
+
+          <div style={{display:'flex', gap:14, justifyContent:'center', flexWrap:'wrap'}}>
             <button
               onClick={() => navigate('/login')}
-              style={{padding:'14px 32px', background:'linear-gradient(135deg, #FF6B1A, #FF8C42)', color:'white', borderRadius:10, fontSize:15, fontWeight:700, border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:8, boxShadow:'0 4px 20px rgba(255,107,26,0.4)'}}
+              className="btn btn-saffron"
+              style={{padding:'14px 34px', fontSize:15.5, borderRadius:12, fontWeight:700, display:'flex', alignItems:'center', gap:10, boxShadow:'0 6px 24px rgba(255,107,26,0.45)'}}
             >
-              {t('checkMyEligibility')} <ArrowRight size={16}/>
+              <span>{t('checkMyEligibility')}</span> <ArrowRight size={18}/>
             </button>
             <button
               onClick={openAdmin}
-              style={{padding:'14px 28px', background:'rgba(255,255,255,0.1)', color:'white', borderRadius:10, fontSize:15, fontWeight:600, border:'1.5px solid rgba(255,255,255,0.25)', cursor:'pointer', backdropFilter:'blur(4px)'}}
+              className="btn"
+              style={{padding:'14px 28px', fontSize:15, borderRadius:12, background:'rgba(255,255,255,0.1)', color:'white', border:'1.5px solid rgba(255,255,255,0.3)', backdropFilter:'blur(8px)', fontWeight:600}}
             >
               {config.demoMode ? t('admin') : t('loginRegister')}
             </button>
           </div>
 
-          {/* Stats Row */}
-          <div style={{display:'flex', gap:0, justifyContent:'center', marginTop:56, flexWrap:'wrap'}}>
+          {/* Stats Bar */}
+          <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(160px, 1fr))', gap:16, marginTop:64, maxWidth:800, margin:'64px auto 0'}}>
             {stats.map((s, i) => (
-              <div key={i} style={{padding:'0 32px', borderRight: i < stats.length-1 ? '1px solid rgba(255,255,255,0.15)' : 'none', textAlign:'center'}}>
-                <div style={{fontSize:28, fontWeight:900, color:s.color}}>{s.value}</div>
-                <div style={{fontSize:12, color:'rgba(255,255,255,0.7)', marginTop:2}}>{s.label}</div>
+              <div
+                key={i}
+                style={{
+                  background:'rgba(255,255,255,0.06)',
+                  backdropFilter:'blur(8px)',
+                  border:'1px solid rgba(255,255,255,0.12)',
+                  borderRadius:16,
+                  padding:'18px 16px',
+                  textAlign:'center',
+                  transition:'transform 0.2s',
+                }}
+              >
+                <div style={{fontSize:30, fontWeight:900, color:s.color, lineHeight:1.1}}>{s.value}</div>
+                <div style={{fontSize:12.5, color:'rgba(255,255,255,0.75)', marginTop:6, fontWeight:500}}>{s.label}</div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* How It Works */}
-      <section style={{padding:'70px 32px', background:'white', textAlign:'center'}}>
-        <div style={{fontSize:12, fontWeight:700, letterSpacing:2, color:'#FF6B1A', textTransform:'uppercase', marginBottom:8}}>
-          {t('howItWorksHeading')}
-        </div>
-        <h2 style={{fontSize:32, fontWeight:800, color:'#003366', marginBottom:40}}>
-          {t('step1Title')} → {t('step4Title')}
-        </h2>
-        <div style={{display:'flex', gap:0, justifyContent:'center', maxWidth:960, margin:'0 auto', flexWrap:'wrap'}}>
-          {[
-            { step:'01', title: t('step1Title'), desc: t('step1Desc'), icon:'👤' },
-            { step:'02', title: t('step2Title'), desc: t('step2Desc'), icon:'✅' },
-            { step:'03', title: t('step3Title'), desc: t('step3Desc'), icon:'📂' },
-            { step:'04', title: t('step4Title'), desc: t('step4Desc'), icon:'📱' },
-          ].map((s, i) => (
-            <div key={i} style={{flex:1, minWidth:200, padding:'24px 20px', position:'relative'}}>
-              {i < 3 && <div style={{position:'absolute', right:0, top:'40%', fontSize:20, color:'#DDE1EE'}}>→</div>}
-              <div style={{width:56, height:56, background:'linear-gradient(135deg, #003366, #1A5FAD)', borderRadius:16, display:'flex', alignItems:'center', justifyContent:'center', fontSize:24, margin:'0 auto 12px', boxShadow:'0 4px 16px rgba(0,51,102,0.2)'}}>
-                {s.icon}
+      {/* How It Works Section */}
+      <section id="how-it-works" style={{padding:'80px 32px', background:'white', textAlign:'center'}}>
+        <div style={{maxWidth:1080, margin:'0 auto'}}>
+          <div style={{fontSize:12.5, fontWeight:700, letterSpacing:2, color:'var(--saffron)', textTransform:'uppercase', marginBottom:8}}>
+            {t('howItWorksHeading')}
+          </div>
+          <h2 style={{fontSize:32, fontWeight:800, color:'#002147', marginBottom:48, letterSpacing:'-0.3px'}}>
+            {t('step1Title')} → {t('step4Title')}
+          </h2>
+
+          <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(220px, 1fr))', gap:24, position:'relative'}}>
+            {[
+              { step:'01', title: t('step1Title'), desc: t('step1Desc'), icon: ShieldCheck, color:'#003366', bg:'#F0F4FA' },
+              { step:'02', title: t('step2Title'), desc: t('step2Desc'), icon: CheckCircle2, color:'#16A34A', bg:'#F0FDF4' },
+              { step:'03', title: t('step3Title'), desc: t('step3Desc'), icon: FolderSync, color:'#FF6B1A', bg:'#FFF7ED' },
+              { step:'04', title: t('step4Title'), desc: t('step4Desc'), icon: Award, color:'#7C3AED', bg:'#FAF5FF' },
+            ].map((s, i) => (
+              <div
+                key={i}
+                style={{
+                  background:'#F8FAFC',
+                  borderRadius:16,
+                  padding:'28px 20px',
+                  border:'1.5px solid #E2E8F0',
+                  textAlign:'center',
+                  transition:'all 0.2s',
+                  position:'relative'
+                }}
+              >
+                <div style={{width:58, height:58, background:s.bg, color:s.color, borderRadius:16, display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 16px', border:`1px solid ${s.color}30`, boxShadow:`0 4px 12px ${s.color}15`}}>
+                  <s.icon size={26} />
+                </div>
+                <div style={{fontSize:11.5, fontWeight:800, color:s.color, letterSpacing:'1px', marginBottom:6}}>
+                  STEP {s.step}
+                </div>
+                <div style={{fontSize:16, fontWeight:700, color:'#002147', marginBottom:8}}>{s.title}</div>
+                <div style={{fontSize:13, color:'#64748B', lineHeight:1.6}}>{s.desc}</div>
               </div>
-              <div style={{fontSize:11, fontWeight:800, color:'rgba(0,51,102,0.4)', letterSpacing:1, marginBottom:4}}>STEP {s.step}</div>
-              <div style={{fontSize:15, fontWeight:700, color:'#003366', marginBottom:6}}>{s.title}</div>
-              <div style={{fontSize:12, color:'#68738F', lineHeight:1.6}}>{s.desc}</div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </section>
 
       {/* Features Grid */}
-      <section id="about" style={{padding:'70px 32px', background:'#F4F6FB'}}>
-        <div style={{maxWidth:1100, margin:'0 auto'}}>
-          <div style={{textAlign:'center', marginBottom:40}}>
-            <div style={{fontSize:12, fontWeight:700, letterSpacing:2, color:'#FF6B1A', textTransform:'uppercase', marginBottom:8}}>
+      <section id="about" style={{padding:'80px 32px', background:'#F1F5F9'}}>
+        <div style={{maxWidth:1140, margin:'0 auto'}}>
+          <div style={{textAlign:'center', marginBottom:48}}>
+            <div style={{fontSize:12.5, fontWeight:700, letterSpacing:2, color:'var(--saffron)', textTransform:'uppercase', marginBottom:8}}>
               {t('featuresHeading')}
             </div>
-            <h2 style={{fontSize:32, fontWeight:800, color:'#003366'}}>{t('brand')}</h2>
+            <h2 style={{fontSize:32, fontWeight:800, color:'#002147', letterSpacing:'-0.3px'}}>{t('brand')}</h2>
           </div>
-          <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))', gap:16}}>
+
+          <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(320px, 1fr))', gap:20}}>
             {features.map((f, i) => (
-              <div key={i} style={{background:'white', borderRadius:12, padding:'24px', border:'1px solid #DDE1EE', transition:'all 0.2s', cursor:'default'}}
-                onMouseEnter={e => { e.currentTarget.style.boxShadow='0 8px 24px rgba(0,33,71,0.1)'; e.currentTarget.style.transform='translateY(-2px)'; }}
-                onMouseLeave={e => { e.currentTarget.style.boxShadow='none'; e.currentTarget.style.transform='translateY(0)'; }}
+              <div
+                key={i}
+                style={{
+                  background:'white',
+                  borderRadius:16,
+                  padding:'28px',
+                  border:'1.5px solid #E2E8F0',
+                  boxShadow:'0 2px 6px rgba(0,33,71,0.03)',
+                  transition:'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+                  cursor:'default'
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.boxShadow = '0 10px 25px rgba(0,33,71,0.08)';
+                  e.currentTarget.style.transform = 'translateY(-3px)';
+                  e.currentTarget.style.borderColor = '#CBD5E1';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.boxShadow = '0 2px 6px rgba(0,33,71,0.03)';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.borderColor = '#E2E8F0';
+                }}
               >
-                <div style={{fontSize:28, marginBottom:12}}>{f.icon}</div>
-                <div style={{fontSize:15, fontWeight:700, color:'#003366', marginBottom:6}}>{f.title}</div>
-                <div style={{fontSize:13, color:'#68738F', lineHeight:1.6}}>{f.desc}</div>
+                <div style={{width:50, height:50, borderRadius:14, background:f.bg, color:f.color, display:'flex', alignItems:'center', justifyContent:'center', marginBottom:16, border:`1px solid ${f.color}25`}}>
+                  <f.icon size={24} />
+                </div>
+                <div style={{fontSize:16, fontWeight:700, color:'#002147', marginBottom:8}}>{f.title}</div>
+                <div style={{fontSize:13.5, color:'#64748B', lineHeight:1.65}}>{f.desc}</div>
               </div>
             ))}
           </div>
@@ -224,77 +297,133 @@ export default function LandingPage() {
       </section>
 
       {/* Available Schemes Preview */}
-      <section id="schemes" style={{padding:'70px 32px', background:'white'}}>
+      <section id="schemes" style={{padding:'80px 32px', background:'white'}}>
         <div style={{maxWidth:1000, margin:'0 auto'}}>
-          <div style={{textAlign:'center', marginBottom:36}}>
-            <div style={{fontSize:12, fontWeight:700, letterSpacing:2, color:'#FF6B1A', textTransform:'uppercase', marginBottom:8}}>
+          <div style={{textAlign:'center', marginBottom:40}}>
+            <div style={{fontSize:12.5, fontWeight:700, letterSpacing:2, color:'var(--saffron)', textTransform:'uppercase', marginBottom:8}}>
               {t('featuredHeading')}
             </div>
-            <h2 style={{fontSize:32, fontWeight:800, color:'#003366'}}>{t('scholarships')}</h2>
+            <h2 style={{fontSize:32, fontWeight:800, color:'#002147', letterSpacing:'-0.3px'}}>{t('scholarships')}</h2>
           </div>
-          <div style={{display:'flex', flexDirection:'column', gap:10}}>
+
+          <div style={{display:'flex', flexDirection:'column', gap:12}}>
             {schemes.map((s, i) => (
-              <div key={i} style={{display:'flex', alignItems:'center', gap:16, padding:'16px 20px', border:'1.5px solid #DDE1EE', borderRadius:10, background:'white', transition:'all 0.2s', cursor:'pointer', borderLeft:`4px solid ${s.type === t('central') ? '#1A5FAD' : '#FF6B1A'}`}}
-                onMouseEnter={e => { e.currentTarget.style.boxShadow='0 4px 16px rgba(0,33,71,0.08)'; e.currentTarget.style.background='#F8F9FC'; }}
-                onMouseLeave={e => { e.currentTarget.style.boxShadow='none'; e.currentTarget.style.background='white'; }}
+              <div
+                key={i}
+                style={{
+                  display:'flex',
+                  alignItems:'center',
+                  gap:18,
+                  padding:'18px 24px',
+                  border:'1.5px solid #E2E8F0',
+                  borderRadius:14,
+                  background:'white',
+                  transition:'all 0.2s',
+                  cursor:'pointer',
+                  borderLeft:`5px solid ${s.type === t('central') ? '#003366' : 'var(--saffron)'}`
+                }}
+                onClick={() => navigate('/login')}
+                onMouseEnter={e => {
+                  e.currentTarget.style.boxShadow = '0 6px 18px rgba(0,33,71,0.06)';
+                  e.currentTarget.style.borderColor = '#CBD5E1';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.boxShadow = 'none';
+                  e.currentTarget.style.borderColor = '#E2E8F0';
+                }}
               >
                 <div style={{flex:1}}>
-                  <div style={{fontSize:15, fontWeight:700, color:'#003366'}}>{s.name}</div>
-                  <div style={{fontSize:12, color:'#68738F', marginTop:2}}>{s.ministry}</div>
+                  <div style={{fontSize:15.5, fontWeight:700, color:'#002147'}}>{s.name}</div>
+                  <div style={{fontSize:12.5, color:'#64748B', marginTop:3, display:'flex', alignItems:'center', gap:6}}>
+                    <Building2 size={13} color="#94A3B8" /> {s.ministry}
+                  </div>
                 </div>
+
                 <div style={{textAlign:'right'}}>
-                  <div style={{fontSize:15, fontWeight:800, color:'#E55A0A'}}>{s.amount}</div>
-                  <div style={{fontSize:11, color:'#D4800A', marginTop:2}}>⏰ {s.deadline}</div>
+                  <div style={{fontSize:16, fontWeight:800, color:'var(--saffron-dark)'}}>{s.amount}</div>
+                  <div style={{fontSize:11.5, color:'#D97706', marginTop:2, display:'flex', alignItems:'center', gap:4, justifyContent:'flex-end'}}>
+                    <Calendar size={12} /> {s.deadline}
+                  </div>
                 </div>
-                <div style={{padding:'3px 10px', borderRadius:20, fontSize:11, fontWeight:700, background: s.type === t('central') ? 'rgba(26,95,173,0.1)' : 'rgba(255,107,26,0.1)', color: s.type === t('central') ? '#1A5FAD' : '#E55A0A'}}>
+
+                <div style={{
+                  padding:'4px 12px',
+                  borderRadius:20,
+                  fontSize:11.5,
+                  fontWeight:700,
+                  background: s.type === t('central') ? '#F0F4FA' : '#FFF7ED',
+                  color: s.type === t('central') ? '#003366' : 'var(--saffron-dark)',
+                  border: `1px solid ${s.type === t('central') ? '#D2DFEE' : '#FFEDD5'}`
+                }}>
                   {s.type}
                 </div>
               </div>
             ))}
           </div>
-          <div style={{textAlign:'center', marginTop:24}}>
+
+          <div style={{textAlign:'center', marginTop:32}}>
             <button
               onClick={() => navigate('/login')}
-              style={{padding:'12px 28px', background:'#003366', color:'white', borderRadius:8, fontSize:14, fontWeight:700, border:'none', cursor:'pointer'}}
+              className="btn btn-primary"
+              style={{padding:'12px 30px', fontSize:14.5, borderRadius:10}}
             >
-              {t('viewAllSchemes')} →
+              <span>{t('viewAllSchemes')}</span> <ChevronRight size={16}/>
             </button>
           </div>
         </div>
       </section>
 
       {/* CTA Banner */}
-      <section style={{background:'linear-gradient(135deg, #FF6B1A, #E55A0A)', padding:'60px 32px', textAlign:'center'}}>
-        <h2 style={{fontSize:32, fontWeight:900, color:'white', marginBottom:12}}>{t('ctaTitle')}</h2>
-        <p style={{fontSize:15, color:'rgba(255,255,255,0.9)', marginBottom:28, maxWidth:520, margin:'0 auto 28px'}}>
-          {t('ctaSubtitle')}
-        </p>
-        <button
-          onClick={() => navigate('/login')}
-          style={{padding:'14px 36px', background:'white', color:'#E55A0A', borderRadius:10, fontSize:15, fontWeight:800, border:'none', cursor:'pointer', boxShadow:'0 4px 20px rgba(0,0,0,0.15)'}}
-        >
-          {t('ctaButton')}
-        </button>
+      <section style={{background:'linear-gradient(135deg, #FF6B1A 0%, #E55400 100%)', padding:'64px 32px', textAlign:'center', color:'white'}}>
+        <div style={{maxWidth:600, margin:'0 auto'}}>
+          <h2 style={{fontSize:32, fontWeight:900, marginBottom:12, letterSpacing:'-0.3px'}}>{t('ctaTitle')}</h2>
+          <p style={{fontSize:15.5, color:'rgba(255,255,255,0.92)', marginBottom:30, lineHeight:1.6}}>
+            {t('ctaSubtitle')}
+          </p>
+          <button
+            onClick={() => navigate('/login')}
+            style={{
+              padding:'14px 36px',
+              background:'white',
+              color:'var(--saffron-dark)',
+              borderRadius:12,
+              fontSize:15.5,
+              fontWeight:800,
+              border:'none',
+              cursor:'pointer',
+              boxShadow:'0 6px 20px rgba(0,0,0,0.18)',
+              transition:'all 0.2s',
+            }}
+            onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.02)'}
+            onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+          >
+            {t('ctaButton')}
+          </button>
+        </div>
       </section>
 
-      {/* Footer */}
-      <footer style={{background:'#0D1120', padding:'40px 32px 20px', color:'rgba(255,255,255,0.6)', fontSize:12}}>
-        <div style={{maxWidth:1100, margin:'0 auto'}}>
-          <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:16, borderBottom:'1px solid rgba(255,255,255,0.08)', paddingBottom:20, marginBottom:20}}>
-            <div style={{display:'flex', alignItems:'center', gap:10}}>
-              <div style={{fontSize:22}}>🏛️</div>
+      {/* Official Government Footer */}
+      <footer style={{background:'#001830', padding:'48px 32px 24px', color:'rgba(255,255,255,0.65)', fontSize:12.5}}>
+        <div style={{maxWidth:1140, margin:'0 auto'}}>
+          <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:20, borderBottom:'1px solid rgba(255,255,255,0.08)', paddingBottom:24, marginBottom:24}}>
+            <div style={{display:'flex', alignItems:'center', gap:12}}>
+              <div style={{width:38, height:38, borderRadius:10, background:'rgba(255,255,255,0.1)', display:'flex', alignItems:'center', justifyContent:'center'}}>
+                <GraduationCap size={20} color="#FFD700" />
+              </div>
               <div>
-                <div style={{fontWeight:700, color:'white', fontSize:14}}>{t('brand')}</div>
-                <div style={{fontSize:11, color:'rgba(255,255,255,0.5)'}}>{t('portalTagline')}</div>
+                <div style={{fontWeight:800, color:'white', fontSize:15}}>{t('brand')}</div>
+                <div style={{fontSize:11.5, color:'rgba(255,255,255,0.5)'}}>{t('portalTagline')}</div>
               </div>
             </div>
-            <div style={{color:'rgba(255,255,255,0.7)', fontSize:12}}>
+
+            <div style={{color:'rgba(255,255,255,0.8)', fontSize:12.5}}>
               {t('footerGovt')}
             </div>
           </div>
-          <div style={{display:'flex', justifyContent:'space-between', flexWrap:'wrap', gap:8, fontSize:11}}>
+
+          <div style={{display:'flex', justifyContent:'space-between', flexWrap:'wrap', gap:12, fontSize:12, color:'rgba(255,255,255,0.5)'}}>
             <span>© 2026 Ministry of Tribal Affairs, Government of India. All rights reserved.</span>
-            <span>Version 2.0 · Multilingual Adivasi Platform</span>
+            <span>SIH 2026 · Multilingual Voice-Enabled Tribal Education Portal</span>
           </div>
         </div>
       </footer>

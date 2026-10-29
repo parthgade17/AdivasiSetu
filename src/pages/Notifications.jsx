@@ -41,8 +41,10 @@ export default function Notifications() {
         <div style={{padding:'8px 0'}}>
           {filtered.length === 0 && (
             <div style={{padding:'60px 32px', textAlign:'center'}}>
-              <div style={{fontSize:48, marginBottom:12}}>🔔</div>
-              <div style={{fontSize:14, fontWeight:600, color:'#003366'}}>No notifications in this category</div>
+              <div style={{width:54, height:54, borderRadius:'50%', background:'#F0F4FA', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 14px', color:'#002147'}}>
+                <Bell size={24} />
+              </div>
+              <div style={{fontSize:14.5, fontWeight:700, color:'#002147'}}>No notifications in this category</div>
             </div>
           )}
           {filtered.map((n, i) => (

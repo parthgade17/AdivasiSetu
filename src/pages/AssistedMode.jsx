@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { api } from '../services/api';
 import { useNavigate } from 'react-router-dom';
-import { Search, UserPlus, ChevronRight, Phone, MapPin, BookOpen } from 'lucide-react';
+import { Search, UserPlus, ChevronRight, Phone, MapPin, BookOpen, Users, Info } from 'lucide-react';
 
 export default function AssistedMode() {
   const navigate = useNavigate();
@@ -51,15 +51,17 @@ export default function AssistedMode() {
   return (
     <div className="fade-in">
       <div className="page-header">
-        <h1 className="page-title">👨‍🏫 Assisted Application Mode</h1>
-        <p className="page-subtitle">Apply on behalf of students who don't have phones or internet access.</p>
+        <h1 className="page-title" style={{display:'flex', alignItems:'center', gap:10}}>
+          <Users size={26} color="#003366"/> Assisted Application Mode
+        </h1>
+        <p className="page-subtitle">Apply on behalf of students who don't have personal phones or internet access.</p>
       </div>
 
-      <div className="assisted-banner">
-        <span style={{fontSize:20}}>ℹ️</span>
+      <div className="assisted-banner" style={{borderRadius:12}}>
+        <Info size={22} style={{flexShrink:0}}/>
         <div>
-          <strong>Assisted Mode</strong> — You are logged in as <strong>{user?.name}</strong> (CSC ID: {user?.cscId}).
-          All applications submitted here will be linked to your CSC ID for audit purposes.
+          <strong>Assisted CSC Sahayak Mode</strong> — Logged in as <strong>{user?.name}</strong> (CSC ID: {user?.cscId}).
+          All applications submitted here are tagged with your CSC ID for official verification.
         </div>
       </div>
 
